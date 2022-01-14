@@ -50,12 +50,15 @@ type MarketStorage interface {
 func makeMemoryMarketStorage() *memoryMarketStorage {
 	return &memoryMarketStorage{
 		offers: make(map[Symbol][]Offer),
+		bids:   make(map[BidID]Bid),
 	}
 }
 
 type memoryMarketStorage struct {
-	mutex  sync.Mutex
-	offers map[Symbol][]Offer
+	mutex     sync.Mutex
+	offers    map[Symbol][]Offer
+	bids      map[BidID]Bid
+	lastBidID BidID
 }
 
 func (s *memoryMarketStorage) AddOffer(o Offer) {
@@ -67,7 +70,12 @@ func (s *memoryMarketStorage) AddOffer(o Offer) {
 }
 
 func (s *memoryMarketStorage) AddBid(b Bid) BidID {
-	panic("incomplete")
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.lastBidID++
+	b.BidID = s.lastBidID
+	s.bids[s.lastBidID] = b
+	return s.lastBidID
 }
 
 func (s *memoryMarketStorage) GetTransactions(id BidID) []Transaction {

@@ -2,7 +2,7 @@ package market
 
 import "testing"
 
-func TestOffer(t *testing.T) {
+func TestOfferAddedToStorage(t *testing.T) {
 	storage := makeMemoryMarketStorage()
 	m := MakeMarket(storage)
 	o := Offer{Symbol: "m"}
@@ -12,6 +12,12 @@ func TestOffer(t *testing.T) {
 	}
 }
 
-func TestBid(t *testing.T) {
-
+func TestBidAddedToStorage(t *testing.T) {
+	storage := makeMemoryMarketStorage()
+	m := MakeMarket(storage)
+	b := Bid{}
+	id := m.Bid(b)
+	if _, found := storage.bids[id]; !found {
+		t.Fatalf("%+v", storage)
+	}
 }

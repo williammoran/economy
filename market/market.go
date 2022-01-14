@@ -1,7 +1,5 @@
 package market
 
-import "sync"
-
 func MakeMarket(s MarketStorage) *Market {
 	return &Market{
 		storage: s,
@@ -9,10 +7,13 @@ func MakeMarket(s MarketStorage) *Market {
 }
 
 type Market struct {
-	sync.Mutex
 	storage MarketStorage
 }
 
 func (m *Market) Offer(o Offer) {
 	m.storage.AddOffer(o)
+}
+
+func (m *Market) Bid(b Bid) BidID {
+	return m.storage.AddBid(b)
 }
