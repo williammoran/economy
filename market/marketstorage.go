@@ -111,7 +111,11 @@ func (s *memoryMarketStorage) BestOffer(sym Symbol) (Offer, bool) {
 
 func (s *memoryMarketStorage) UpdateOffer(o Offer) {
 	l := s.offers[o.Symbol]
-	l[o.ID] = o
+	if o.Amount > 0 {
+		l[o.ID] = o
+	} else {
+		delete(l, o.ID)
+	}
 	s.offers[o.Symbol] = l
 }
 
