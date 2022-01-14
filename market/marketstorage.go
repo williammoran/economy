@@ -1,6 +1,7 @@
 package market
 
 import (
+	"log"
 	"sync"
 	"time"
 
@@ -12,72 +13,128 @@ type AccountID int64
 type Symbol string
 
 type Offer struct {
+	ID      uuid.UUID
 	Account AccountID
 	Symbol  Symbol
+	Price   int64
 	Amount  int64
 }
 
 type BidID int64
 
-type BidType byte
+type OrderType byte
 
 const (
-	BidMarket BidType = 1
-	BidLimit  BidType = 2
+	BidMarket        OrderType = 0
+	BidLimit         OrderType = 1
+	BidStatusPending           = 0
+	BidStatusFilled            = 1
 )
 
 type Bid struct {
 	BidID   BidID
-	BidType BidType
+	BidType OrderType
 	Account AccountID
 	Symbol  Symbol
-	Volume  int64
+	Price   int64
 	Amount  int64
+	Status  byte
 }
 
 type Transaction struct {
-	ID    uuid.UUID
-	BidID BidID
-	Date  time.Time
+	ID      uuid.UUID
+	BidID   BidID
+	OfferID uuid.UUID
+	Price   int64
+	Amount  int64
+	Date    time.Time
 }
 
 type MarketStorage interface {
+	Lock()
+	Unlock()
 	AddOffer(Offer)
+	BestOffer(Symbol) (Offer, bool)
+	UpdateOffer(Offer)
 	AddBid(Bid) BidID
-	GetTransactions(BidID) []Transaction
+	UpdateBid(Bid)
+	GetBid(BidID) Bid
+	NewTransaction(Transaction)
 }
 
 func makeMemoryMarketStorage() *memoryMarketStorage {
 	return &memoryMarketStorage{
-		offers: make(map[Symbol][]Offer),
+		offers: make(map[Symbol]map[uuid.UUID]Offer),
 		bids:   make(map[BidID]Bid),
 	}
 }
 
 type memoryMarketStorage struct {
-	mutex     sync.Mutex
-	offers    map[Symbol][]Offer
-	bids      map[BidID]Bid
-	lastBidID BidID
+	mutex        sync.Mutex
+	offers       map[Symbol]map[uuid.UUID]Offer
+	bids         map[BidID]Bid
+	transactions []Transaction
+	lastBidID    BidID
+}
+
+func (s *memoryMarketStorage) Lock() {
+	s.mutex.Lock()
+}
+
+func (s *memoryMarketStorage) Unlock() {
+	s.mutex.Unlock()
 }
 
 func (s *memoryMarketStorage) AddOffer(o Offer) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	o.ID = uuid.New()
 	offers := s.offers[o.Symbol]
-	offers = append(offers, o)
+	if offers == nil {
+		offers = make(map[uuid.UUID]Offer)
+	}
+	offers[o.ID] = o
 	s.offers[o.Symbol] = offers
 }
 
+func (s *memoryMarketStorage) BestOffer(sym Symbol) (Offer, bool) {
+	l := s.offers[sym]
+	if len(l) == 0 {
+		return Offer{}, false
+	}
+	o := Offer{Price: 2 ^ 60}
+	for _, offer := range l {
+		if offer.Price < o.Price {
+			o = offer
+		}
+	}
+	return o, true
+}
+
+func (s *memoryMarketStorage) UpdateOffer(o Offer) {
+	l := s.offers[o.Symbol]
+	l[o.ID] = o
+	s.offers[o.Symbol] = l
+}
+
 func (s *memoryMarketStorage) AddBid(b Bid) BidID {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
 	s.lastBidID++
 	b.BidID = s.lastBidID
 	s.bids[s.lastBidID] = b
 	return s.lastBidID
 }
 
-func (s *memoryMarketStorage) GetTransactions(id BidID) []Transaction {
-	panic("incomplete")
+func (s *memoryMarketStorage) UpdateBid(b Bid) {
+	s.bids[b.BidID] = b
+}
+
+func (s *memoryMarketStorage) GetBid(id BidID) Bid {
+	bid, found := s.bids[s.lastBidID]
+	if !found {
+		log.Panicf("Bid %d not found", id)
+	}
+	return bid
+}
+
+func (s *memoryMarketStorage) NewTransaction(t Transaction) {
+	t.ID = uuid.New()
+	s.transactions = append(s.transactions, t)
 }

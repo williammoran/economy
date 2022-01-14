@@ -1,6 +1,8 @@
 package market
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestOfferAddedToStorage(t *testing.T) {
 	storage := makeMemoryMarketStorage()
@@ -15,6 +17,9 @@ func TestOfferAddedToStorage(t *testing.T) {
 func TestBidAddedToStorage(t *testing.T) {
 	storage := makeMemoryMarketStorage()
 	m := MakeMarket(storage)
+	m.orderProcessors = map[OrderType]OrderProcessor{
+		BidMarket: &mockOrderProcessor{},
+	}
 	b := Bid{}
 	id := m.Bid(b)
 	if _, found := storage.bids[id]; !found {
