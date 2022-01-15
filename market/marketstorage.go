@@ -26,6 +26,7 @@ type OrderType byte
 
 const (
 	BidMarket        OrderType = 0
+	OfferMarket      OrderType = 0
 	BidLimit         OrderType = 1
 	BidStatusPending           = 0
 	BidStatusFilled            = 1

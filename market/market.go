@@ -3,8 +3,8 @@ package market
 import "time"
 
 type OrderProcessor interface {
-	TryFillBid(Bid, MarketStorage)
-	GetAskingPrice(Offer, MarketStorage) int64
+	TryFillBid(MarketStorage, map[OrderType]OrderProcessor, Bid)
+	GetAskingPrice(MarketStorage, Offer) int64
 }
 
 func MakeMarket(s MarketStorage) *Market {
@@ -31,7 +31,7 @@ func (m *Market) Bid(b Bid) BidID {
 	m.storage.Lock()
 	defer m.storage.Unlock()
 	b.BidID = m.storage.AddBid(b)
-	m.orderProcessors[b.BidType].TryFillBid(b, m.storage)
+	m.orderProcessors[b.BidType].TryFillBid(m.storage, m.orderProcessors, b)
 	return b.BidID
 }
 

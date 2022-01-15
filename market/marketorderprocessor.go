@@ -6,7 +6,7 @@ type marketOrderProcessor struct {
 	now func() time.Time
 }
 
-func (m *marketOrderProcessor) TryFillBid(bid Bid, ms MarketStorage) {
+func (m *marketOrderProcessor) TryFillBid(ms MarketStorage, opl map[OrderType]OrderProcessor, bid Bid) {
 	for {
 		if bid.Amount < 1 {
 			bid.Status = BidStatusFilled
@@ -48,9 +48,6 @@ func (m *marketOrderProcessor) TryFillBid(bid Bid, ms MarketStorage) {
 	}
 }
 
-func (m *marketOrderProcessor) GetAskingPrice(o Offer, ms MarketStorage) int64 {
-	if o.Price > 0 {
-		return o.Price
-	}
+func (m *marketOrderProcessor) GetAskingPrice(ms MarketStorage, o Offer) int64 {
 	return ms.LastPrice(o.Symbol)
 }

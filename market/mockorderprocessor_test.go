@@ -5,7 +5,7 @@ type mockOrderProcessor struct {
 	askingPrice int64
 }
 
-func (m *mockOrderProcessor) TryFillBid(bid Bid, ms MarketStorage) {
+func (m *mockOrderProcessor) TryFillBid(ms MarketStorage, opl map[OrderType]OrderProcessor, bid Bid) {
 	bid.Amount -= m.fulfill
 	if bid.Amount < 0 {
 		bid.Amount = 0
@@ -13,7 +13,7 @@ func (m *mockOrderProcessor) TryFillBid(bid Bid, ms MarketStorage) {
 	ms.UpdateBid(bid)
 }
 
-func (m *mockOrderProcessor) GetAskingPrice(o Offer, ms MarketStorage) int64 {
+func (m *mockOrderProcessor) GetAskingPrice(ms MarketStorage, o Offer) int64 {
 	if m.askingPrice > 0 {
 		return m.askingPrice
 	}
