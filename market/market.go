@@ -4,6 +4,7 @@ import "time"
 
 type OrderProcessor interface {
 	TryFillBid(Bid, MarketStorage)
+	GetAskingPrice(Offer, MarketStorage) int64
 }
 
 func MakeMarket(s MarketStorage) *Market {

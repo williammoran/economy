@@ -30,7 +30,6 @@ func (m *marketOrderProcessor) TryFillBid(bid Bid, ms MarketStorage) {
 				},
 			)
 			off.Amount = 0
-			ms.UpdateOffer(off)
 		} else {
 			off.Amount -= bid.Amount
 			ms.NewTransaction(
@@ -43,7 +42,15 @@ func (m *marketOrderProcessor) TryFillBid(bid Bid, ms MarketStorage) {
 				},
 			)
 			bid.Amount = 0
-			ms.UpdateOffer(off)
 		}
+		ms.UpdateOffer(off)
+		ms.SetLastPrice(off.Symbol, off.Price)
 	}
+}
+
+func (m *marketOrderProcessor) GetAskingPrice(o Offer, ms MarketStorage) int64 {
+	if o.Price > 0 {
+		return o.Price
+	}
+	return ms.LastPrice(o.Symbol)
 }

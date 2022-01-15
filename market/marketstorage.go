@@ -60,12 +60,15 @@ type MarketStorage interface {
 	UpdateBid(Bid)
 	GetBid(BidID) Bid
 	NewTransaction(Transaction)
+	LastPrice(Symbol) int64
+	SetLastPrice(Symbol, int64)
 }
 
 func makeMemoryMarketStorage() *memoryMarketStorage {
 	return &memoryMarketStorage{
-		offers: make(map[Symbol]map[uuid.UUID]Offer),
-		bids:   make(map[BidID]Bid),
+		offers:    make(map[Symbol]map[uuid.UUID]Offer),
+		bids:      make(map[BidID]Bid),
+		lastPrice: make(map[Symbol]int64),
 	}
 }
 
@@ -75,6 +78,7 @@ type memoryMarketStorage struct {
 	bids         map[BidID]Bid
 	transactions []Transaction
 	lastBidID    BidID
+	lastPrice    map[Symbol]int64
 }
 
 func (s *memoryMarketStorage) Lock() {
@@ -141,4 +145,18 @@ func (s *memoryMarketStorage) GetBid(id BidID) Bid {
 func (s *memoryMarketStorage) NewTransaction(t Transaction) {
 	t.ID = uuid.New()
 	s.transactions = append(s.transactions, t)
+}
+
+func (s *memoryMarketStorage) LastPrice(symbol Symbol) int64 {
+	p, found := s.lastPrice[symbol]
+	if found {
+		return p
+	}
+	return 1
+}
+
+func (s *memoryMarketStorage) SetLastPrice(
+	symbol Symbol, price int64,
+) {
+	s.lastPrice[symbol] = price
 }

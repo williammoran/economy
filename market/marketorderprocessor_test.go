@@ -19,6 +19,9 @@ func TestTryFillFilledByExactOffer(t *testing.T) {
 	if bid.Status != BidStatusFilled {
 		t.Fatalf("%+v", bid)
 	}
+	if storage.LastPrice("m") != 20 {
+		t.Fatalf("%d != 20", storage.LastPrice("m"))
+	}
 }
 
 func TestTryFillFilledByLargerOffer(t *testing.T) {
@@ -40,6 +43,9 @@ func TestTryFillFilledByLargerOffer(t *testing.T) {
 			t.Fatalf("%+v", o)
 		}
 	}
+	if storage.LastPrice("m") != 20 {
+		t.Fatalf("%d != 20", storage.LastPrice("m"))
+	}
 }
 
 func TestTryFillPartiallyFilled(t *testing.T) {
@@ -58,6 +64,9 @@ func TestTryFillPartiallyFilled(t *testing.T) {
 	}
 	if bid.Amount != 5 {
 		t.Fatalf("%+v", bid)
+	}
+	if storage.LastPrice("m") != 20 {
+		t.Fatalf("%d != 20", storage.LastPrice("m"))
 	}
 }
 
