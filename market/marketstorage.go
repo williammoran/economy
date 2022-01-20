@@ -13,11 +13,12 @@ type AccountID int64
 type Symbol string
 
 type Offer struct {
-	ID      uuid.UUID
-	Account AccountID
-	Symbol  Symbol
-	Price   int64
-	Amount  int64
+	ID        uuid.UUID
+	OfferType OrderType
+	Account   AccountID
+	Symbol    Symbol
+	Price     int64
+	Amount    int64
 }
 
 type BidID int64
