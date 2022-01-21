@@ -8,14 +8,12 @@ import (
 	"github.com/google/uuid"
 )
 
-type AccountID int64
-
 type Symbol string
 
 type Offer struct {
 	ID        uuid.UUID
 	OfferType OrderType
-	Account   AccountID
+	Account   int64
 	Symbol    Symbol
 	Price     int64
 	Amount    int64
@@ -37,7 +35,7 @@ const (
 type Bid struct {
 	BidID   BidID
 	BidType OrderType
-	Account AccountID
+	Account int64
 	Symbol  Symbol
 	Price   int64
 	Amount  int64
