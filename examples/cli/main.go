@@ -1,3 +1,6 @@
+// This package contains a CLI client for experimenting
+// with the library's capabilities. Build and start the
+// program and type "help<enter>" for more information.
 package main
 
 import (
@@ -12,8 +15,33 @@ import (
 	"github.com/williammoran/economy"
 )
 
+const help = `
+Use this CLI to experiment with the market library.
+
+This program persists market data to CSV files in the
+current directory. Thus your market activity persists
+across multiple executions, unless you delete the
+CSV files.
+
+Commands are as follows:
+help - this message
+account $id $account_balance - create or update an account
+ with the specified id and balance of funds
+accounts - list all known accounts
+offer $account $symbol $volume - Offer for $account to
+ sell $volume of $symbol at the current market price
+offer $account $symbol $volume limit $price - Offer for
+ $account to sell $volume of $symbol at or above $price
+bid $account $symbol $volume - Put in an order for $account
+ to purchase $volume of $symbol at current market price
+bid $account $symbol $volume limit $price - Put in an
+ order for $account to purchase $volume of $symbol at any
+ price at or below $price
+market - List current prices of all known symbols
+`
+
 func main() {
-	market := economy.MakeMarket(makeMemoryMarketStorage())
+	market := economy.MakeMarket(makeCsvStorage())
 	accounts := make(map[int64]int64)
 	reader := bufio.NewReader(os.Stdin)
 	for {
@@ -23,6 +51,8 @@ func main() {
 		}
 		command := strings.ToLower(tokens[0])
 		switch command {
+		case "help":
+			fmt.Print(help)
 		case "account":
 			setAccount(tokens[1:], accounts)
 		case "accounts":
