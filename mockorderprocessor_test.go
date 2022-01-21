@@ -1,4 +1,4 @@
-package market
+package economy
 
 type mockOrderProcessor struct {
 	fulfill     int64

@@ -1,4 +1,4 @@
-package market
+package economy
 
 import (
 	"log"
