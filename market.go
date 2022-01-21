@@ -25,7 +25,7 @@ const (
 )
 
 type Bid struct {
-	ID      int64
+	ID      uuid.UUID
 	BidType OrderType
 	Account int64
 	Symbol  string
@@ -36,7 +36,7 @@ type Bid struct {
 
 type Transaction struct {
 	ID      uuid.UUID
-	BidID   int64
+	BidID   uuid.UUID
 	OfferID uuid.UUID
 	Price   int64
 	Amount  int64
@@ -53,9 +53,9 @@ type MarketStorage interface {
 	// no offers
 	BestOffer(string) (Offer, bool)
 	UpdateOffer(Offer)
-	AddBid(Bid) int64
+	AddBid(Bid) uuid.UUID
 	UpdateBid(Bid)
-	GetBid(int64) Bid
+	GetBid(uuid.UUID) Bid
 	NewTransaction(Transaction)
 	LastPrice(string) int64
 	SetLastPrice(string, int64)
@@ -89,7 +89,7 @@ func (m *Market) Offer(o Offer) {
 	m.storage.AddOffer(o)
 }
 
-func (m *Market) Bid(b Bid) int64 {
+func (m *Market) Bid(b Bid) uuid.UUID {
 	m.storage.Lock()
 	defer m.storage.Unlock()
 	b.ID = m.storage.AddBid(b)
@@ -97,7 +97,7 @@ func (m *Market) Bid(b Bid) int64 {
 	return b.ID
 }
 
-func (m *Market) GetBid(id int64) Bid {
+func (m *Market) GetBid(id uuid.UUID) Bid {
 	m.storage.Lock()
 	defer m.storage.Unlock()
 	return m.storage.GetBid(id)

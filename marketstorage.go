@@ -10,7 +10,7 @@ import (
 func makeMemoryMarketStorage() *memoryMarketStorage {
 	return &memoryMarketStorage{
 		offers:    make(map[string]map[uuid.UUID]Offer),
-		bids:      make(map[int64]Bid),
+		bids:      make(map[uuid.UUID]Bid),
 		lastPrice: make(map[string]int64),
 	}
 }
@@ -18,9 +18,8 @@ func makeMemoryMarketStorage() *memoryMarketStorage {
 type memoryMarketStorage struct {
 	mutex        sync.Mutex
 	offers       map[string]map[uuid.UUID]Offer
-	bids         map[int64]Bid
+	bids         map[uuid.UUID]Bid
 	transactions []Transaction
-	lastint64    int64
 	lastPrice    map[string]int64
 }
 
@@ -67,19 +66,18 @@ func (s *memoryMarketStorage) UpdateOffer(o Offer) {
 	s.offers[o.Symbol] = l
 }
 
-func (s *memoryMarketStorage) AddBid(b Bid) int64 {
-	s.lastint64++
-	b.ID = s.lastint64
-	s.bids[s.lastint64] = b
-	return s.lastint64
+func (s *memoryMarketStorage) AddBid(b Bid) uuid.UUID {
+	b.ID = uuid.New()
+	s.bids[b.ID] = b
+	return b.ID
 }
 
 func (s *memoryMarketStorage) UpdateBid(b Bid) {
 	s.bids[b.ID] = b
 }
 
-func (s *memoryMarketStorage) GetBid(id int64) Bid {
-	bid, found := s.bids[s.lastint64]
+func (s *memoryMarketStorage) GetBid(id uuid.UUID) Bid {
+	bid, found := s.bids[id]
 	if !found {
 		log.Panicf("Bid %d not found", id)
 	}

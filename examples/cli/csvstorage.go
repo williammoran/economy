@@ -29,9 +29,8 @@ const (
 type csvStorage struct {
 	mutex        sync.Mutex
 	offers       map[string]map[uuid.UUID]economy.Offer
-	bids         map[int64]economy.Bid
+	bids         map[uuid.UUID]economy.Bid
 	transactions []economy.Transaction
-	lastBidID    int64
 	lastPrice    map[string]int64
 }
 
@@ -80,19 +79,18 @@ func (s *csvStorage) UpdateOffer(o economy.Offer) {
 	s.offers[o.Symbol] = l
 }
 
-func (s *csvStorage) AddBid(b economy.Bid) int64 {
-	s.lastBidID++
-	b.ID = s.lastBidID
-	s.bids[s.lastBidID] = b
-	return s.lastBidID
+func (s *csvStorage) AddBid(b economy.Bid) uuid.UUID {
+	b.ID = uuid.New()
+	s.bids[b.ID] = b
+	return b.ID
 }
 
 func (s *csvStorage) UpdateBid(b economy.Bid) {
 	s.bids[b.ID] = b
 }
 
-func (s *csvStorage) GetBid(id int64) economy.Bid {
-	bid, found := s.bids[s.lastBidID]
+func (s *csvStorage) GetBid(id uuid.UUID) economy.Bid {
+	bid, found := s.bids[id]
 	if !found {
 		log.Panicf("Bid %d not found", id)
 	}
@@ -252,8 +250,7 @@ func savePrices(prices map[string]int64) {
 }
 
 func (s *csvStorage) loadBids() {
-	s.bids = make(map[int64]economy.Bid)
-	s.lastBidID = 0
+	s.bids = make(map[uuid.UUID]economy.Bid)
 	f, err := os.Open(priceFile)
 	if err != nil {
 		return
@@ -268,12 +265,8 @@ func (s *csvStorage) loadBids() {
 		if err != nil {
 			panic(err.Error())
 		}
-		id := int64(mustParseInt64(record[0]))
-		if id > s.lastBidID {
-			s.lastBidID = id
-		}
 		bid := economy.Bid{
-			ID:      id,
+			ID:      uuid.MustParse(record[0]),
 			BidType: economy.OrderType(mustParseByte(record[1])),
 			Account: mustParseInt64(record[2]),
 			Symbol:  record[3],
@@ -281,11 +274,11 @@ func (s *csvStorage) loadBids() {
 			Amount:  mustParseInt64(record[2]),
 			Status:  mustParseByte(record[1]),
 		}
-		s.bids[id] = bid
+		s.bids[bid.ID] = bid
 	}
 }
 
-func saveBids(bids map[int64]economy.Bid) {
+func saveBids(bids map[uuid.UUID]economy.Bid) {
 	f, err := os.Create(bidFile)
 	if err != nil {
 		panic(err.Error())
@@ -295,7 +288,7 @@ func saveBids(bids map[int64]economy.Bid) {
 	defer writer.Flush()
 	for _, bid := range bids {
 		var r []string
-		r = append(r, fmt.Sprintf("%d", bid.ID))
+		r = append(r, bid.ID.String())
 		r = append(r, fmt.Sprintf("%d", bid.BidType))
 		r = append(r, fmt.Sprintf("%d", bid.Account))
 		r = append(r, bid.Symbol)
@@ -324,7 +317,7 @@ func loadTransactions() []economy.Transaction {
 		}
 		tx := economy.Transaction{
 			ID:      uuid.MustParse(record[0]),
-			BidID:   int64(mustParseInt64(record[1])),
+			BidID:   uuid.MustParse(record[1]),
 			OfferID: uuid.MustParse(record[2]),
 			Price:   mustParseInt64(record[3]),
 			Amount:  mustParseInt64(record[4]),
