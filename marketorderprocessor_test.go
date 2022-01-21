@@ -13,7 +13,7 @@ func TestTryFillFilledByExactOffer(t *testing.T) {
 	t.Logf("%+v", storage.offers)
 	bid := Bid{Symbol: "m", Amount: 10, BidType: BidMarket}
 	id := storage.AddBid(bid)
-	bid.BidID = id
+	bid.ID = id
 	storage.SetLastPrice("m", 7)
 	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OfferMarket: &mop}, bid)
 	bid = storage.GetBid(id)
@@ -33,7 +33,7 @@ func TestTryFillFilledByLargerOffer(t *testing.T) {
 	t.Logf("%+v", storage.offers)
 	bid := Bid{Symbol: "m", Amount: 10, BidType: BidMarket}
 	id := storage.AddBid(bid)
-	bid.BidID = id
+	bid.ID = id
 	storage.SetLastPrice("m", 7)
 	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OfferMarket: &mop}, bid)
 	bid = storage.GetBid(id)
@@ -58,7 +58,7 @@ func TestTryFillPartiallyFilled(t *testing.T) {
 	t.Logf("%+v", storage.offers)
 	bid := Bid{Symbol: "m", Amount: 10, BidType: BidMarket}
 	id := storage.AddBid(bid)
-	bid.BidID = id
+	bid.ID = id
 	storage.SetLastPrice("m", 7)
 	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OfferMarket: &mop}, bid)
 	bid = storage.GetBid(id)
@@ -83,7 +83,7 @@ func TestTryFillFilledBy2Offers(t *testing.T) {
 	t.Logf("%+v", storage.offers)
 	bid := Bid{Symbol: "m", Amount: 10, BidType: BidMarket}
 	id := storage.AddBid(bid)
-	bid.BidID = id
+	bid.ID = id
 	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OfferMarket: &mop}, bid)
 	bid = storage.GetBid(id)
 	if bid.Status != BidStatusFilled {

@@ -8,18 +8,14 @@ import (
 	"github.com/google/uuid"
 )
 
-type Symbol string
-
 type Offer struct {
 	ID        uuid.UUID
 	OfferType OrderType
 	Account   int64
-	Symbol    Symbol
+	Symbol    string
 	Price     int64
 	Amount    int64
 }
-
-type BidID int64
 
 type OrderType byte
 
@@ -33,10 +29,10 @@ const (
 )
 
 type Bid struct {
-	BidID   BidID
+	ID      int64
 	BidType OrderType
 	Account int64
-	Symbol  Symbol
+	Symbol  string
 	Price   int64
 	Amount  int64
 	Status  byte
@@ -44,7 +40,7 @@ type Bid struct {
 
 type Transaction struct {
 	ID      uuid.UUID
-	BidID   BidID
+	BidID   int64
 	OfferID uuid.UUID
 	Price   int64
 	Amount  int64
@@ -57,35 +53,35 @@ type MarketStorage interface {
 	// AddOffer returns the UUID of the created offer
 	AddOffer(Offer) uuid.UUID
 	// BestOffer returns the offer with the best price
-	// for the specified symbol, or false if there are
+	// for the specified string, or false if there are
 	// no offers
-	BestOffer(Symbol) (Offer, bool)
+	BestOffer(string) (Offer, bool)
 	UpdateOffer(Offer)
-	AddBid(Bid) BidID
+	AddBid(Bid) int64
 	UpdateBid(Bid)
-	GetBid(BidID) Bid
+	GetBid(int64) Bid
 	NewTransaction(Transaction)
-	LastPrice(Symbol) int64
-	SetLastPrice(Symbol, int64)
-	// Return all the known symbols
-	AllSymbols() []Symbol
+	LastPrice(string) int64
+	SetLastPrice(string, int64)
+	// Return all the known strings
+	AllSymbols() []string
 }
 
 func makeMemoryMarketStorage() *memoryMarketStorage {
 	return &memoryMarketStorage{
-		offers:    make(map[Symbol]map[uuid.UUID]Offer),
-		bids:      make(map[BidID]Bid),
-		lastPrice: make(map[Symbol]int64),
+		offers:    make(map[string]map[uuid.UUID]Offer),
+		bids:      make(map[int64]Bid),
+		lastPrice: make(map[string]int64),
 	}
 }
 
 type memoryMarketStorage struct {
 	mutex        sync.Mutex
-	offers       map[Symbol]map[uuid.UUID]Offer
-	bids         map[BidID]Bid
+	offers       map[string]map[uuid.UUID]Offer
+	bids         map[int64]Bid
 	transactions []Transaction
-	lastBidID    BidID
-	lastPrice    map[Symbol]int64
+	lastint64    int64
+	lastPrice    map[string]int64
 }
 
 func (s *memoryMarketStorage) Lock() {
@@ -107,7 +103,7 @@ func (s *memoryMarketStorage) AddOffer(o Offer) uuid.UUID {
 	return o.ID
 }
 
-func (s *memoryMarketStorage) BestOffer(sym Symbol) (Offer, bool) {
+func (s *memoryMarketStorage) BestOffer(sym string) (Offer, bool) {
 	l := s.offers[sym]
 	if len(l) == 0 {
 		return Offer{}, false
@@ -131,19 +127,19 @@ func (s *memoryMarketStorage) UpdateOffer(o Offer) {
 	s.offers[o.Symbol] = l
 }
 
-func (s *memoryMarketStorage) AddBid(b Bid) BidID {
-	s.lastBidID++
-	b.BidID = s.lastBidID
-	s.bids[s.lastBidID] = b
-	return s.lastBidID
+func (s *memoryMarketStorage) AddBid(b Bid) int64 {
+	s.lastint64++
+	b.ID = s.lastint64
+	s.bids[s.lastint64] = b
+	return s.lastint64
 }
 
 func (s *memoryMarketStorage) UpdateBid(b Bid) {
-	s.bids[b.BidID] = b
+	s.bids[b.ID] = b
 }
 
-func (s *memoryMarketStorage) GetBid(id BidID) Bid {
-	bid, found := s.bids[s.lastBidID]
+func (s *memoryMarketStorage) GetBid(id int64) Bid {
+	bid, found := s.bids[s.lastint64]
 	if !found {
 		log.Panicf("Bid %d not found", id)
 	}
@@ -155,8 +151,8 @@ func (s *memoryMarketStorage) NewTransaction(t Transaction) {
 	s.transactions = append(s.transactions, t)
 }
 
-func (s *memoryMarketStorage) LastPrice(symbol Symbol) int64 {
-	p, found := s.lastPrice[symbol]
+func (s *memoryMarketStorage) LastPrice(string string) int64 {
+	p, found := s.lastPrice[string]
 	if found {
 		return p
 	}
@@ -164,20 +160,20 @@ func (s *memoryMarketStorage) LastPrice(symbol Symbol) int64 {
 }
 
 func (s *memoryMarketStorage) SetLastPrice(
-	symbol Symbol, price int64,
+	string string, price int64,
 ) {
-	s.lastPrice[symbol] = price
+	s.lastPrice[string] = price
 }
 
-func (s *memoryMarketStorage) AllSymbols() []Symbol {
-	l := make(map[Symbol]bool)
+func (s *memoryMarketStorage) AllSymbols() []string {
+	l := make(map[string]bool)
 	for s := range s.lastPrice {
 		l[s] = true
 	}
 	for s := range s.offers {
 		l[s] = true
 	}
-	var rv []Symbol
+	var rv []string
 	for s := range l {
 		rv = append(rv, s)
 	}

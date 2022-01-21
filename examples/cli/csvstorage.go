@@ -28,11 +28,11 @@ const (
 
 type csvStorage struct {
 	mutex        sync.Mutex
-	offers       map[economy.Symbol]map[uuid.UUID]economy.Offer
-	bids         map[economy.BidID]economy.Bid
+	offers       map[string]map[uuid.UUID]economy.Offer
+	bids         map[int64]economy.Bid
 	transactions []economy.Transaction
-	lastBidID    economy.BidID
-	lastPrice    map[economy.Symbol]int64
+	lastBidID    int64
+	lastPrice    map[string]int64
 }
 
 func (s *csvStorage) Lock() {
@@ -56,7 +56,7 @@ func (s *csvStorage) AddOffer(o economy.Offer) uuid.UUID {
 	return o.ID
 }
 
-func (s *csvStorage) BestOffer(sym economy.Symbol) (economy.Offer, bool) {
+func (s *csvStorage) BestOffer(sym string) (economy.Offer, bool) {
 	l := s.offers[sym]
 	if len(l) == 0 {
 		return economy.Offer{}, false
@@ -80,18 +80,18 @@ func (s *csvStorage) UpdateOffer(o economy.Offer) {
 	s.offers[o.Symbol] = l
 }
 
-func (s *csvStorage) AddBid(b economy.Bid) economy.BidID {
+func (s *csvStorage) AddBid(b economy.Bid) int64 {
 	s.lastBidID++
-	b.BidID = s.lastBidID
+	b.ID = s.lastBidID
 	s.bids[s.lastBidID] = b
 	return s.lastBidID
 }
 
 func (s *csvStorage) UpdateBid(b economy.Bid) {
-	s.bids[b.BidID] = b
+	s.bids[b.ID] = b
 }
 
-func (s *csvStorage) GetBid(id economy.BidID) economy.Bid {
+func (s *csvStorage) GetBid(id int64) economy.Bid {
 	bid, found := s.bids[s.lastBidID]
 	if !found {
 		log.Panicf("Bid %d not found", id)
@@ -104,7 +104,7 @@ func (s *csvStorage) NewTransaction(t economy.Transaction) {
 	s.transactions = append(s.transactions, t)
 }
 
-func (s *csvStorage) LastPrice(symbol economy.Symbol) int64 {
+func (s *csvStorage) LastPrice(symbol string) int64 {
 	p, found := s.lastPrice[symbol]
 	if found {
 		return p
@@ -113,20 +113,20 @@ func (s *csvStorage) LastPrice(symbol economy.Symbol) int64 {
 }
 
 func (s *csvStorage) SetLastPrice(
-	symbol economy.Symbol, price int64,
+	symbol string, price int64,
 ) {
 	s.lastPrice[symbol] = price
 }
 
-func (s *csvStorage) AllSymbols() []economy.Symbol {
-	l := make(map[economy.Symbol]bool)
+func (s *csvStorage) AllSymbols() []string {
+	l := make(map[string]bool)
 	for s := range s.lastPrice {
 		l[s] = true
 	}
 	for s := range s.offers {
 		l[s] = true
 	}
-	var rv []economy.Symbol
+	var rv []string
 	for s := range l {
 		rv = append(rv, s)
 	}
@@ -135,7 +135,7 @@ func (s *csvStorage) AllSymbols() []economy.Symbol {
 
 func (s *csvStorage) loadAll() {
 	offers := loadOffers()
-	s.offers = make(map[economy.Symbol]map[uuid.UUID]economy.Offer)
+	s.offers = make(map[string]map[uuid.UUID]economy.Offer)
 	for _, o := range offers {
 		oList := s.offers[o.Symbol]
 		if oList == nil {
@@ -186,7 +186,7 @@ func loadOffers() map[uuid.UUID]economy.Offer {
 			ID:        uuid.MustParse(record[0]),
 			OfferType: economy.OrderType(mustParseByte(record[1])),
 			Account:   mustParseInt64(record[2]),
-			Symbol:    economy.Symbol(record[3]),
+			Symbol:    record[3],
 			Price:     mustParseInt64(record[4]),
 			Amount:    mustParseInt64(record[5]),
 		}
@@ -207,15 +207,15 @@ func saveOffers(offers map[uuid.UUID]economy.Offer) {
 		r = append(r, offer.ID.String())
 		r = append(r, fmt.Sprintf("%d", offer.OfferType))
 		r = append(r, fmt.Sprintf("%d", offer.Account))
-		r = append(r, string(offer.Symbol))
+		r = append(r, offer.Symbol)
 		r = append(r, fmt.Sprintf("%d", offer.Price))
 		r = append(r, fmt.Sprintf("%d", offer.Amount))
 		writer.Write(r)
 	}
 }
 
-func loadPrices() map[economy.Symbol]int64 {
-	prices := make(map[economy.Symbol]int64)
+func loadPrices() map[string]int64 {
+	prices := make(map[string]int64)
 	f, err := os.Open(priceFile)
 	if err != nil {
 		return prices
@@ -230,12 +230,12 @@ func loadPrices() map[economy.Symbol]int64 {
 		if err != nil {
 			panic(err.Error())
 		}
-		symbol := economy.Symbol(record[0])
+		symbol := record[0]
 		prices[symbol] = mustParseInt64(record[1])
 	}
 }
 
-func savePrices(prices map[economy.Symbol]int64) {
+func savePrices(prices map[string]int64) {
 	f, err := os.Create(priceFile)
 	if err != nil {
 		panic(err.Error())
@@ -245,14 +245,14 @@ func savePrices(prices map[economy.Symbol]int64) {
 	defer writer.Flush()
 	for symbol, price := range prices {
 		var r []string
-		r = append(r, string(symbol))
+		r = append(r, symbol)
 		r = append(r, fmt.Sprintf("%d", price))
 		writer.Write(r)
 	}
 }
 
 func (s *csvStorage) loadBids() {
-	s.bids = make(map[economy.BidID]economy.Bid)
+	s.bids = make(map[int64]economy.Bid)
 	s.lastBidID = 0
 	f, err := os.Open(priceFile)
 	if err != nil {
@@ -268,15 +268,15 @@ func (s *csvStorage) loadBids() {
 		if err != nil {
 			panic(err.Error())
 		}
-		id := economy.BidID(mustParseInt64(record[0]))
+		id := int64(mustParseInt64(record[0]))
 		if id > s.lastBidID {
 			s.lastBidID = id
 		}
 		bid := economy.Bid{
-			BidID:   id,
+			ID:      id,
 			BidType: economy.OrderType(mustParseByte(record[1])),
 			Account: mustParseInt64(record[2]),
-			Symbol:  economy.Symbol(record[3]),
+			Symbol:  record[3],
 			Price:   mustParseInt64(record[2]),
 			Amount:  mustParseInt64(record[2]),
 			Status:  mustParseByte(record[1]),
@@ -285,7 +285,7 @@ func (s *csvStorage) loadBids() {
 	}
 }
 
-func saveBids(bids map[economy.BidID]economy.Bid) {
+func saveBids(bids map[int64]economy.Bid) {
 	f, err := os.Create(bidFile)
 	if err != nil {
 		panic(err.Error())
@@ -295,10 +295,10 @@ func saveBids(bids map[economy.BidID]economy.Bid) {
 	defer writer.Flush()
 	for _, bid := range bids {
 		var r []string
-		r = append(r, fmt.Sprintf("%d", bid.BidID))
+		r = append(r, fmt.Sprintf("%d", bid.ID))
 		r = append(r, fmt.Sprintf("%d", bid.BidType))
 		r = append(r, fmt.Sprintf("%d", bid.Account))
-		r = append(r, string(bid.Symbol))
+		r = append(r, bid.Symbol)
 		r = append(r, fmt.Sprintf("%d", bid.Price))
 		r = append(r, fmt.Sprintf("%d", bid.Amount))
 		r = append(r, fmt.Sprintf("%d", bid.Status))
@@ -324,7 +324,7 @@ func loadTransactions() []economy.Transaction {
 		}
 		tx := economy.Transaction{
 			ID:      uuid.MustParse(record[0]),
-			BidID:   economy.BidID(mustParseInt64(record[1])),
+			BidID:   int64(mustParseInt64(record[1])),
 			OfferID: uuid.MustParse(record[2]),
 			Price:   mustParseInt64(record[3]),
 			Amount:  mustParseInt64(record[4]),

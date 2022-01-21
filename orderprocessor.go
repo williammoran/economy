@@ -7,7 +7,7 @@ func fillBid(ms MarketStorage, ts time.Time, bid Bid, off Offer, price int64) Bi
 		bid.Amount -= off.Amount
 		ms.NewTransaction(
 			Transaction{
-				BidID:   bid.BidID,
+				BidID:   bid.ID,
 				OfferID: off.ID,
 				Price:   price,
 				Amount:  off.Amount,
@@ -19,7 +19,7 @@ func fillBid(ms MarketStorage, ts time.Time, bid Bid, off Offer, price int64) Bi
 		off.Amount -= bid.Amount
 		ms.NewTransaction(
 			Transaction{
-				BidID:   bid.BidID,
+				BidID:   bid.ID,
 				OfferID: off.ID,
 				Price:   price,
 				Amount:  bid.Amount,

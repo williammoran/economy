@@ -12,7 +12,7 @@ func TestFillBidFilledByExactOffer(t *testing.T) {
 	o.ID = offerID
 	bid := Bid{Symbol: "m", Amount: 10, BidType: BidMarket}
 	id := storage.AddBid(bid)
-	bid.BidID = id
+	bid.ID = id
 	bid = fillBid(storage, time.Time{}, bid, o, 7)
 	if bid.Amount != 0 {
 		t.Fatalf("%+v", bid)
@@ -33,7 +33,7 @@ func TestFillBidFilledByLargerOffer(t *testing.T) {
 	o.ID = offerID
 	bid := Bid{Symbol: "m", Amount: 10, BidType: BidMarket}
 	id := storage.AddBid(bid)
-	bid.BidID = id
+	bid.ID = id
 	bid = fillBid(storage, time.Time{}, bid, o, 7)
 	if bid.Amount != 0 {
 		t.Fatalf("%+v", bid)
@@ -54,7 +54,7 @@ func TestFillBidPartiallyFilled(t *testing.T) {
 	o.ID = offerID
 	bid := Bid{Symbol: "m", Amount: 10, BidType: BidMarket}
 	id := storage.AddBid(bid)
-	bid.BidID = id
+	bid.ID = id
 	bid = fillBid(storage, time.Time{}, bid, o, 7)
 	if bid.Amount != 5 {
 		t.Fatalf("%+v", bid)

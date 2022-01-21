@@ -27,27 +27,27 @@ func (m *Market) Offer(o Offer) {
 	m.storage.AddOffer(o)
 }
 
-func (m *Market) Bid(b Bid) BidID {
+func (m *Market) Bid(b Bid) int64 {
 	m.storage.Lock()
 	defer m.storage.Unlock()
-	b.BidID = m.storage.AddBid(b)
+	b.ID = m.storage.AddBid(b)
 	m.orderProcessors[b.BidType].TryFillBid(m.storage, m.orderProcessors, b)
-	return b.BidID
+	return b.ID
 }
 
-func (m *Market) GetBid(id BidID) Bid {
+func (m *Market) GetBid(id int64) Bid {
 	m.storage.Lock()
 	defer m.storage.Unlock()
 	return m.storage.GetBid(id)
 }
 
-func (m *Market) AllSymbols() []Symbol {
+func (m *Market) AllSymbols() []string {
 	m.storage.Lock()
 	defer m.storage.Unlock()
 	return m.storage.AllSymbols()
 }
 
-func (m *Market) LastPrice(s Symbol) int64 {
+func (m *Market) LastPrice(s string) int64 {
 	m.storage.Lock()
 	defer m.storage.Unlock()
 	return m.storage.LastPrice(s)

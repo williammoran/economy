@@ -147,7 +147,7 @@ func offer(c []string, market *economy.Market) {
 
 // $_ $account $symbol $volume
 // $_ $account $symbol $volume limit $price
-func parseBidOrOffer(c []string) (economy.OrderType, int64, economy.Symbol, int64, int64, bool) {
+func parseBidOrOffer(c []string) (economy.OrderType, int64, string, int64, int64, bool) {
 	var ok bool
 	var orderType economy.OrderType
 	var price int64
@@ -165,7 +165,7 @@ func parseBidOrOffer(c []string) (economy.OrderType, int64, economy.Symbol, int6
 			return 0, 0, "", 0, 0, false
 		}
 	}
-	symbol := economy.Symbol(c[1])
+	symbol := c[1]
 	account, ok := parseAccount(c[0])
 	if !ok {
 		return 0, 0, "", 0, 0, false
