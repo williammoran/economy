@@ -6,7 +6,7 @@ type limitOrderProcessor struct {
 	now func() time.Time
 }
 
-func (m *limitOrderProcessor) TryFillBid(ms MarketStorage, opl map[OrderType]OrderProcessor, bid Bid) {
+func (m *limitOrderProcessor) TryFillBid(ms MarketStorage, opl map[OrderType]orderProcessor, bid Bid) {
 	for {
 		if bid.Amount < 1 {
 			bid.Status = BidStatusFilled

@@ -63,15 +63,15 @@ type MarketStorage interface {
 	AllSymbols() []string
 }
 
-type OrderProcessor interface {
-	TryFillBid(MarketStorage, map[OrderType]OrderProcessor, Bid)
+type orderProcessor interface {
+	TryFillBid(MarketStorage, map[OrderType]orderProcessor, Bid)
 	GetAskingPrice(MarketStorage, Offer) int64
 }
 
 func MakeMarket(s MarketStorage) *Market {
 	return &Market{
 		storage: s,
-		orderProcessors: map[OrderType]OrderProcessor{
+		orderProcessors: map[OrderType]orderProcessor{
 			OrderTypeMarket: &marketOrderProcessor{now: time.Now},
 			OrderTypeLimit:  &limitOrderProcessor{now: time.Now},
 		},
@@ -80,7 +80,7 @@ func MakeMarket(s MarketStorage) *Market {
 
 type Market struct {
 	storage         MarketStorage
-	orderProcessors map[OrderType]OrderProcessor
+	orderProcessors map[OrderType]orderProcessor
 }
 
 func (m *Market) Offer(o Offer) {
