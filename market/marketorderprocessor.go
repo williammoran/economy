@@ -19,33 +19,7 @@ func (m *marketOrderProcessor) TryFillBid(ms MarketStorage, opl map[OrderType]Or
 			return
 		}
 		price := opl[off.OfferType].GetAskingPrice(ms, off)
-		if off.Amount <= bid.Amount {
-			bid.Amount -= off.Amount
-			ms.NewTransaction(
-				Transaction{
-					BidID:   bid.BidID,
-					OfferID: off.ID,
-					Price:   price,
-					Amount:  off.Amount,
-					Date:    m.now(),
-				},
-			)
-			off.Amount = 0
-		} else {
-			off.Amount -= bid.Amount
-			ms.NewTransaction(
-				Transaction{
-					BidID:   bid.BidID,
-					OfferID: off.ID,
-					Price:   price,
-					Amount:  bid.Amount,
-					Date:    m.now(),
-				},
-			)
-			bid.Amount = 0
-		}
-		ms.UpdateOffer(off)
-		ms.SetLastPrice(off.Symbol, price)
+		bid = fillBid(ms, m.now(), bid, off, price)
 	}
 }
 

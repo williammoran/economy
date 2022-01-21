@@ -56,7 +56,8 @@ type Transaction struct {
 type MarketStorage interface {
 	Lock()
 	Unlock()
-	AddOffer(Offer)
+	// AddOffer returns the UUID of the created offer
+	AddOffer(Offer) uuid.UUID
 	// BestOffer returns the offer with the best price
 	// for the specified symbol, or false if there are
 	// no offers
@@ -95,7 +96,7 @@ func (s *memoryMarketStorage) Unlock() {
 	s.mutex.Unlock()
 }
 
-func (s *memoryMarketStorage) AddOffer(o Offer) {
+func (s *memoryMarketStorage) AddOffer(o Offer) uuid.UUID {
 	o.ID = uuid.New()
 	offers := s.offers[o.Symbol]
 	if offers == nil {
@@ -103,6 +104,7 @@ func (s *memoryMarketStorage) AddOffer(o Offer) {
 	}
 	offers[o.ID] = o
 	s.offers[o.Symbol] = offers
+	return o.ID
 }
 
 func (s *memoryMarketStorage) BestOffer(sym Symbol) (Offer, bool) {
