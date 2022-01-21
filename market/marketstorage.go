@@ -29,6 +29,7 @@ const (
 	BidMarket        OrderType = 0
 	OfferMarket      OrderType = 0
 	BidLimit         OrderType = 1
+	OfferLimit       OrderType = 1
 	BidStatusPending           = 0
 	BidStatusFilled            = 1
 )
@@ -56,6 +57,9 @@ type MarketStorage interface {
 	Lock()
 	Unlock()
 	AddOffer(Offer)
+	// BestOffer returns the offer with the best price
+	// for the specified symbol, or false if there are
+	// no offers
 	BestOffer(Symbol) (Offer, bool)
 	UpdateOffer(Offer)
 	AddBid(Bid) BidID
