@@ -1,6 +1,67 @@
 package economy
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
+type Offer struct {
+	ID        uuid.UUID
+	OfferType OrderType
+	Account   int64
+	Symbol    string
+	Price     int64
+	Amount    int64
+}
+
+type OrderType byte
+
+const (
+	OrderTypeMarket  OrderType = 0
+	OrderTypeLimit   OrderType = 1
+	BidStatusPending           = 0
+	BidStatusFilled            = 1
+)
+
+type Bid struct {
+	ID      int64
+	BidType OrderType
+	Account int64
+	Symbol  string
+	Price   int64
+	Amount  int64
+	Status  byte
+}
+
+type Transaction struct {
+	ID      uuid.UUID
+	BidID   int64
+	OfferID uuid.UUID
+	Price   int64
+	Amount  int64
+	Date    time.Time
+}
+
+type MarketStorage interface {
+	Lock()
+	Unlock()
+	// AddOffer returns the UUID of the created offer
+	AddOffer(Offer) uuid.UUID
+	// BestOffer returns the offer with the best price
+	// for the specified string, or false if there are
+	// no offers
+	BestOffer(string) (Offer, bool)
+	UpdateOffer(Offer)
+	AddBid(Bid) int64
+	UpdateBid(Bid)
+	GetBid(int64) Bid
+	NewTransaction(Transaction)
+	LastPrice(string) int64
+	SetLastPrice(string, int64)
+	// Return all the known strings
+	AllSymbols() []string
+}
 
 type OrderProcessor interface {
 	TryFillBid(MarketStorage, map[OrderType]OrderProcessor, Bid)
