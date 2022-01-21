@@ -18,7 +18,7 @@ func TestBidAddedToStorage(t *testing.T) {
 	storage := makeMemoryMarketStorage()
 	m := MakeMarket(storage)
 	m.orderProcessors = map[OrderType]OrderProcessor{
-		BidMarket: &mockOrderProcessor{},
+		OrderTypeMarket: &mockOrderProcessor{},
 	}
 	b := Bid{}
 	id := m.Bid(b)

@@ -20,10 +20,8 @@ type Offer struct {
 type OrderType byte
 
 const (
-	BidMarket        OrderType = 0
-	OfferMarket      OrderType = 0
-	BidLimit         OrderType = 1
-	OfferLimit       OrderType = 1
+	OrderTypeMarket  OrderType = 0
+	OrderTypeLimit   OrderType = 1
 	BidStatusPending           = 0
 	BidStatusFilled            = 1
 )

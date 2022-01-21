@@ -152,10 +152,10 @@ func parseBidOrOffer(c []string) (economy.OrderType, int64, string, int64, int64
 	var orderType economy.OrderType
 	var price int64
 	if len(c) == 3 {
-		orderType = economy.OfferMarket
+		orderType = economy.OrderTypeMarket
 	} else {
 		if len(c) == 5 {
-			orderType = economy.OfferLimit
+			orderType = economy.OrderTypeLimit
 			price, ok = parsePrice(c[4])
 			if !ok {
 				return 0, 0, "", 0, 0, false

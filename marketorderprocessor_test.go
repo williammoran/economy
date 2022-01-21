@@ -11,11 +11,11 @@ func TestTryFillFilledByExactOffer(t *testing.T) {
 	o := Offer{Symbol: "m", Amount: 10, Price: 20}
 	storage.AddOffer(o)
 	t.Logf("%+v", storage.offers)
-	bid := Bid{Symbol: "m", Amount: 10, BidType: BidMarket}
+	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeMarket}
 	id := storage.AddBid(bid)
 	bid.ID = id
 	storage.SetLastPrice("m", 7)
-	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OfferMarket: &mop}, bid)
+	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OrderTypeMarket: &mop}, bid)
 	bid = storage.GetBid(id)
 	if bid.Status != BidStatusFilled {
 		t.Fatalf("%+v", bid)
@@ -31,11 +31,11 @@ func TestTryFillFilledByLargerOffer(t *testing.T) {
 	o := Offer{Symbol: "m", Amount: 20, Price: 20}
 	storage.AddOffer(o)
 	t.Logf("%+v", storage.offers)
-	bid := Bid{Symbol: "m", Amount: 10, BidType: BidMarket}
+	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeMarket}
 	id := storage.AddBid(bid)
 	bid.ID = id
 	storage.SetLastPrice("m", 7)
-	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OfferMarket: &mop}, bid)
+	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OrderTypeMarket: &mop}, bid)
 	bid = storage.GetBid(id)
 	if bid.Status != BidStatusFilled {
 		t.Fatalf("%+v", bid)
@@ -56,11 +56,11 @@ func TestTryFillPartiallyFilled(t *testing.T) {
 	o := Offer{Symbol: "m", Amount: 5, Price: 20}
 	storage.AddOffer(o)
 	t.Logf("%+v", storage.offers)
-	bid := Bid{Symbol: "m", Amount: 10, BidType: BidMarket}
+	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeMarket}
 	id := storage.AddBid(bid)
 	bid.ID = id
 	storage.SetLastPrice("m", 7)
-	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OfferMarket: &mop}, bid)
+	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OrderTypeMarket: &mop}, bid)
 	bid = storage.GetBid(id)
 	if bid.Status != BidStatusPending {
 		t.Fatalf("%+v", bid)
@@ -81,10 +81,10 @@ func TestTryFillFilledBy2Offers(t *testing.T) {
 	o = Offer{Symbol: "m", Amount: 8, Price: 20}
 	storage.AddOffer(o)
 	t.Logf("%+v", storage.offers)
-	bid := Bid{Symbol: "m", Amount: 10, BidType: BidMarket}
+	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeMarket}
 	id := storage.AddBid(bid)
 	bid.ID = id
-	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OfferMarket: &mop}, bid)
+	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OrderTypeMarket: &mop}, bid)
 	bid = storage.GetBid(id)
 	if bid.Status != BidStatusFilled {
 		t.Fatalf("%+v", bid)

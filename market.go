@@ -11,7 +11,8 @@ func MakeMarket(s MarketStorage) *Market {
 	return &Market{
 		storage: s,
 		orderProcessors: map[OrderType]OrderProcessor{
-			BidMarket: &marketOrderProcessor{now: time.Now},
+			OrderTypeMarket: &marketOrderProcessor{now: time.Now},
+			OrderTypeLimit:  &limitOrderProcessor{now: time.Now},
 		},
 	}
 }

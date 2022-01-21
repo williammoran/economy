@@ -8,12 +8,12 @@ import (
 func TestNoTransactionWhenLimitPriceTooHigh(t *testing.T) {
 	mop := limitOrderProcessor{now: func() time.Time { return time.Time{} }}
 	storage := makeMemoryMarketStorage()
-	o := Offer{OfferType: OfferLimit, Symbol: "m", Amount: 10, Price: 20}
+	o := Offer{OfferType: OrderTypeLimit, Symbol: "m", Amount: 10, Price: 20}
 	storage.AddOffer(o)
-	bid := Bid{Symbol: "m", Amount: 10, BidType: BidLimit, Price: 10}
+	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeLimit, Price: 10}
 	id := storage.AddBid(bid)
 	bid.ID = id
-	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OfferLimit: &mop}, bid)
+	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OrderTypeLimit: &mop}, bid)
 	bid = storage.GetBid(id)
 	if bid.Status != BidStatusPending {
 		t.Fatalf("%+v", bid)
@@ -26,13 +26,13 @@ func TestNoTransactionWhenLimitPriceTooHigh(t *testing.T) {
 func TestSatisfiesAtMarketPriceInBetween(t *testing.T) {
 	mop := limitOrderProcessor{now: func() time.Time { return time.Time{} }}
 	storage := makeMemoryMarketStorage()
-	o := Offer{OfferType: OfferLimit, Symbol: "m", Amount: 10, Price: 10}
+	o := Offer{OfferType: OrderTypeLimit, Symbol: "m", Amount: 10, Price: 10}
 	storage.AddOffer(o)
-	bid := Bid{Symbol: "m", Amount: 10, BidType: BidLimit, Price: 20}
+	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeLimit, Price: 20}
 	storage.SetLastPrice("m", 15)
 	id := storage.AddBid(bid)
 	bid.ID = id
-	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OfferLimit: &mop}, bid)
+	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OrderTypeLimit: &mop}, bid)
 	bid = storage.GetBid(id)
 	if bid.Status != BidStatusFilled {
 		t.Fatalf("%+v", bid)
@@ -46,13 +46,13 @@ func TestSatisfiesAtMarketPriceInBetween(t *testing.T) {
 func TestSatisfiesAtBidWhenMarketHigh(t *testing.T) {
 	mop := limitOrderProcessor{now: func() time.Time { return time.Time{} }}
 	storage := makeMemoryMarketStorage()
-	o := Offer{OfferType: OfferLimit, Symbol: "m", Amount: 10, Price: 10}
+	o := Offer{OfferType: OrderTypeLimit, Symbol: "m", Amount: 10, Price: 10}
 	storage.AddOffer(o)
-	bid := Bid{Symbol: "m", Amount: 10, BidType: BidLimit, Price: 20}
+	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeLimit, Price: 20}
 	storage.SetLastPrice("m", 25)
 	id := storage.AddBid(bid)
 	bid.ID = id
-	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OfferLimit: &mop}, bid)
+	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OrderTypeLimit: &mop}, bid)
 	bid = storage.GetBid(id)
 	if bid.Status != BidStatusFilled {
 		t.Fatalf("%+v", bid)
@@ -66,13 +66,13 @@ func TestSatisfiesAtBidWhenMarketHigh(t *testing.T) {
 func TestSatisfiesAtOfferWhenMarketLow(t *testing.T) {
 	mop := limitOrderProcessor{now: func() time.Time { return time.Time{} }}
 	storage := makeMemoryMarketStorage()
-	o := Offer{OfferType: OfferLimit, Symbol: "m", Amount: 10, Price: 10}
+	o := Offer{OfferType: OrderTypeLimit, Symbol: "m", Amount: 10, Price: 10}
 	storage.AddOffer(o)
-	bid := Bid{Symbol: "m", Amount: 10, BidType: BidLimit, Price: 20}
+	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeLimit, Price: 20}
 	storage.SetLastPrice("m", 5)
 	id := storage.AddBid(bid)
 	bid.ID = id
-	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OfferLimit: &mop}, bid)
+	mop.TryFillBid(storage, map[OrderType]OrderProcessor{OrderTypeLimit: &mop}, bid)
 	bid = storage.GetBid(id)
 	if bid.Status != BidStatusFilled {
 		t.Fatalf("%+v", bid)
