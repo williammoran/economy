@@ -13,7 +13,7 @@ func TestNoTransactionWhenLimitPriceTooHigh(t *testing.T) {
 	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeLimit, Price: 10}
 	id := storage.AddBid(bid)
 	bid.ID = id
-	mop.TryFillBid(storage, map[OrderType]orderProcessor{OrderTypeLimit: &mop}, bid)
+	mop.TryFillBid(storage, makeMockAccounts(), map[OrderType]orderProcessor{OrderTypeLimit: &mop}, bid)
 	bid = storage.GetBid(id)
 	if bid.Status != BidStatusPending {
 		t.Fatalf("%+v", bid)
@@ -32,7 +32,7 @@ func TestSatisfiesAtMarketPriceInBetween(t *testing.T) {
 	storage.SetLastPrice("m", 15)
 	id := storage.AddBid(bid)
 	bid.ID = id
-	mop.TryFillBid(storage, map[OrderType]orderProcessor{OrderTypeLimit: &mop}, bid)
+	mop.TryFillBid(storage, makeMockAccounts(), map[OrderType]orderProcessor{OrderTypeLimit: &mop}, bid)
 	bid = storage.GetBid(id)
 	if bid.Status != BidStatusFilled {
 		t.Fatalf("%+v", bid)
@@ -52,7 +52,7 @@ func TestSatisfiesAtBidWhenMarketHigh(t *testing.T) {
 	storage.SetLastPrice("m", 25)
 	id := storage.AddBid(bid)
 	bid.ID = id
-	mop.TryFillBid(storage, map[OrderType]orderProcessor{OrderTypeLimit: &mop}, bid)
+	mop.TryFillBid(storage, makeMockAccounts(), map[OrderType]orderProcessor{OrderTypeLimit: &mop}, bid)
 	bid = storage.GetBid(id)
 	if bid.Status != BidStatusFilled {
 		t.Fatalf("%+v", bid)
@@ -72,7 +72,7 @@ func TestSatisfiesAtOfferWhenMarketLow(t *testing.T) {
 	storage.SetLastPrice("m", 5)
 	id := storage.AddBid(bid)
 	bid.ID = id
-	mop.TryFillBid(storage, map[OrderType]orderProcessor{OrderTypeLimit: &mop}, bid)
+	mop.TryFillBid(storage, makeMockAccounts(), map[OrderType]orderProcessor{OrderTypeLimit: &mop}, bid)
 	bid = storage.GetBid(id)
 	if bid.Status != BidStatusFilled {
 		t.Fatalf("%+v", bid)

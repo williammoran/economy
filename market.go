@@ -63,12 +63,25 @@ type MarketStorage interface {
 	AllSymbols() []string
 }
 
+// Accounts provides a method for code to inject a callback
+// for crediteding or debiteding funds when transactions
+// occur. Note that both functions must be transaction
+// safe otherwise funds could go missing.
+type Accounts interface {
+	// Credit must add the specified funds to the
+	// spedified account
+	Credit(accountID, funds int64)
+	// DebitIfPossible must debit the specified funds
+	// or return false
+	DebitIfPossible(accountID, funds int64) bool
+}
+
 type orderProcessor interface {
-	TryFillBid(MarketStorage, map[OrderType]orderProcessor, Bid)
+	TryFillBid(MarketStorage, Accounts, map[OrderType]orderProcessor, Bid)
 	GetAskingPrice(MarketStorage, Offer) int64
 }
 
-func MakeMarket(s MarketStorage) *Market {
+func MakeMarket(s MarketStorage, a Accounts) *Market {
 	return &Market{
 		storage: s,
 		orderProcessors: map[OrderType]orderProcessor{
@@ -80,6 +93,7 @@ func MakeMarket(s MarketStorage) *Market {
 
 type Market struct {
 	storage         MarketStorage
+	accounts        Accounts
 	orderProcessors map[OrderType]orderProcessor
 }
 
@@ -93,7 +107,9 @@ func (m *Market) Bid(b Bid) uuid.UUID {
 	m.storage.Lock()
 	defer m.storage.Unlock()
 	b.ID = m.storage.AddBid(b)
-	m.orderProcessors[b.BidType].TryFillBid(m.storage, m.orderProcessors, b)
+	m.orderProcessors[b.BidType].TryFillBid(
+		m.storage, m.accounts, m.orderProcessors, b,
+	)
 	return b.ID
 }
 

@@ -41,8 +41,8 @@ market - List current prices of all known symbols
 `
 
 func main() {
-	market := economy.MakeMarket(makeCsvStorage())
-	accounts := make(map[int64]int64)
+	accounts := makeAccounts()
+	market := economy.MakeMarket(makeCsvStorage(), accounts)
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		tokens := nextCommand(reader)
@@ -89,7 +89,7 @@ func nextCommand(r io.ByteReader) []string {
 	return strings.Split(c, " ")
 }
 
-func setAccount(c []string, accounts map[int64]int64) {
+func setAccount(c []string, accounts *accounts) {
 	id, ok := parseAccount(c[0])
 	if !ok {
 		return
@@ -98,13 +98,13 @@ func setAccount(c []string, accounts map[int64]int64) {
 	if !ok {
 		return
 	}
-	accounts[id] = amount
+	accounts.accounts[id] = amount
 	fmt.Printf("Account %d now has %d\n", id, amount)
 }
 
-func showAccounts(accounts map[int64]int64) {
+func showAccounts(accounts *accounts) {
 	fmt.Println("AccountID   Balance")
-	for id, balance := range accounts {
+	for id, balance := range accounts.accounts {
 		fmt.Printf("%9d %9d\n", id, balance)
 	}
 }

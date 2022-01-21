@@ -6,7 +6,7 @@ import (
 
 func TestOfferAddedToStorage(t *testing.T) {
 	storage := makeMemoryMarketStorage()
-	m := MakeMarket(storage)
+	m := MakeMarket(storage, makeMockAccounts())
 	o := Offer{Symbol: "m"}
 	m.Offer(o)
 	if len(storage.offers["m"]) != 1 {
@@ -16,7 +16,7 @@ func TestOfferAddedToStorage(t *testing.T) {
 
 func TestBidAddedToStorage(t *testing.T) {
 	storage := makeMemoryMarketStorage()
-	m := MakeMarket(storage)
+	m := MakeMarket(storage, makeMockAccounts())
 	m.orderProcessors = map[OrderType]orderProcessor{
 		OrderTypeMarket: &mockOrderProcessor{},
 	}
