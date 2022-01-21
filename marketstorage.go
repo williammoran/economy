@@ -69,6 +69,8 @@ type MarketStorage interface {
 	NewTransaction(Transaction)
 	LastPrice(Symbol) int64
 	SetLastPrice(Symbol, int64)
+	// Return all the known symbols
+	AllSymbols() []Symbol
 }
 
 func makeMemoryMarketStorage() *memoryMarketStorage {
@@ -167,4 +169,19 @@ func (s *memoryMarketStorage) SetLastPrice(
 	symbol Symbol, price int64,
 ) {
 	s.lastPrice[symbol] = price
+}
+
+func (s *memoryMarketStorage) AllSymbols() []Symbol {
+	l := make(map[Symbol]bool)
+	for s := range s.lastPrice {
+		l[s] = true
+	}
+	for s := range s.offers {
+		l[s] = true
+	}
+	var rv []Symbol
+	for s := range l {
+		rv = append(rv, s)
+	}
+	return rv
 }

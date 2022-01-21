@@ -40,3 +40,15 @@ func (m *Market) GetBid(id BidID) Bid {
 	defer m.storage.Unlock()
 	return m.storage.GetBid(id)
 }
+
+func (m *Market) AllSymbols() []Symbol {
+	m.storage.Lock()
+	defer m.storage.Unlock()
+	return m.storage.AllSymbols()
+}
+
+func (m *Market) LastPrice(s Symbol) int64 {
+	m.storage.Lock()
+	defer m.storage.Unlock()
+	return m.storage.LastPrice(s)
+}
