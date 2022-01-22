@@ -40,13 +40,18 @@ type Transaction struct {
 	Date    time.Time
 }
 
+// MarketStorage interface must keep track of Bids, Offers,
+// and Transactions.
 type MarketStorage interface {
+	// Lock ensures that concurrent activity is safe until
+	// Unlock is called
 	Lock()
+	// Unlock makes storage available for other threads
 	Unlock()
 	// AddOffer returns the UUID of the created offer
 	AddOffer(Offer) uuid.UUID
 	// BestOffer returns the offer with the best price
-	// for the specified string, or false if there are
+	// for the specified symbol, or false if there are
 	// no offers
 	BestOffer(string) (Offer, bool)
 	UpdateOffer(Offer)
@@ -56,7 +61,7 @@ type MarketStorage interface {
 	NewTransaction(Transaction)
 	LastPrice(string) int64
 	SetLastPrice(string, int64)
-	// Return all the known strings
+	// Return all the known symbols
 	AllSymbols() []string
 }
 
