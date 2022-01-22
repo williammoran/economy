@@ -272,7 +272,6 @@ func (s *csvStorage) loadBids() {
 			Symbol:  record[3],
 			Price:   mustParseInt64(record[2]),
 			Amount:  mustParseInt64(record[2]),
-			Status:  mustParseByte(record[1]),
 		}
 		s.bids[bid.ID] = bid
 	}
@@ -294,7 +293,6 @@ func saveBids(bids map[uuid.UUID]economy.Bid) {
 		r = append(r, bid.Symbol)
 		r = append(r, fmt.Sprintf("%d", bid.Price))
 		r = append(r, fmt.Sprintf("%d", bid.Amount))
-		r = append(r, fmt.Sprintf("%d", bid.Status))
 		writer.Write(r)
 	}
 }
