@@ -17,7 +17,7 @@ func TestTryFillFilledByExactOffer(t *testing.T) {
 	storage.SetLastPrice("m", 7)
 	mop.TryFillBid(storage, makeMockAccounts(), map[OrderType]orderProcessor{OrderTypeMarket: &mop}, bid)
 	bid = storage.GetBid(id)
-	if bid.Status != BidStatusFilled {
+	if bid.Amount != 0 {
 		t.Fatalf("%+v", bid)
 	}
 	if storage.LastPrice("m") != 7 {
@@ -37,7 +37,7 @@ func TestTryFillFilledByLargerOffer(t *testing.T) {
 	storage.SetLastPrice("m", 7)
 	mop.TryFillBid(storage, makeMockAccounts(), map[OrderType]orderProcessor{OrderTypeMarket: &mop}, bid)
 	bid = storage.GetBid(id)
-	if bid.Status != BidStatusFilled {
+	if bid.Amount != 0 {
 		t.Fatalf("%+v", bid)
 	}
 	for _, o := range storage.offers["m"] {
@@ -62,7 +62,7 @@ func TestTryFillPartiallyFilled(t *testing.T) {
 	storage.SetLastPrice("m", 7)
 	mop.TryFillBid(storage, makeMockAccounts(), map[OrderType]orderProcessor{OrderTypeMarket: &mop}, bid)
 	bid = storage.GetBid(id)
-	if bid.Status != BidStatusPending {
+	if bid.Amount != 5 {
 		t.Fatalf("%+v", bid)
 	}
 	if bid.Amount != 5 {
@@ -86,7 +86,7 @@ func TestTryFillFilledBy2Offers(t *testing.T) {
 	bid.ID = id
 	mop.TryFillBid(storage, makeMockAccounts(), map[OrderType]orderProcessor{OrderTypeMarket: &mop}, bid)
 	bid = storage.GetBid(id)
-	if bid.Status != BidStatusFilled {
+	if bid.Amount != 0 {
 		t.Fatalf("%+v", bid)
 	}
 	if len(storage.offers["m"]) > 1 {

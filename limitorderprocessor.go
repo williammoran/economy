@@ -14,7 +14,6 @@ func (m *limitOrderProcessor) TryFillBid(
 ) {
 	for {
 		if bid.Amount < 1 {
-			bid.Status = BidStatusFilled
 			ms.UpdateBid(bid)
 			return
 		}
@@ -39,7 +38,12 @@ func (m *limitOrderProcessor) TryFillBid(
 		} else {
 			price = askPrice
 		}
-		bid = fillBid(ms, m.now(), bid, off, price)
+		var filled bool
+		bid, filled = fillBid(ms, accounts, m.now(), bid, off, price)
+		if !filled {
+			ms.UpdateBid(bid)
+			return
+		}
 	}
 }
 

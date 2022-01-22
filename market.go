@@ -18,10 +18,8 @@ type Offer struct {
 type OrderType byte
 
 const (
-	OrderTypeMarket  OrderType = 0
-	OrderTypeLimit   OrderType = 1
-	BidStatusPending           = 0
-	BidStatusFilled            = 1
+	OrderTypeMarket OrderType = 0
+	OrderTypeLimit  OrderType = 1
 )
 
 type Bid struct {
@@ -31,7 +29,6 @@ type Bid struct {
 	Symbol  string
 	Price   int64
 	Amount  int64
-	Status  byte
 }
 
 type Transaction struct {

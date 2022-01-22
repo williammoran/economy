@@ -14,7 +14,6 @@ func (m *marketOrderProcessor) TryFillBid(
 ) {
 	for {
 		if bid.Amount < 1 {
-			bid.Status = BidStatusFilled
 			ms.UpdateBid(bid)
 			return
 		}
@@ -24,7 +23,12 @@ func (m *marketOrderProcessor) TryFillBid(
 			return
 		}
 		price := opl[off.OfferType].GetAskingPrice(ms, off)
-		bid = fillBid(ms, m.now(), bid, off, price)
+		var filled bool
+		bid, filled = fillBid(ms, accounts, m.now(), bid, off, price)
+		if !filled {
+			ms.UpdateBid(bid)
+			return
+		}
 	}
 }
 
