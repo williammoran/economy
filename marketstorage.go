@@ -48,9 +48,19 @@ func (s *memoryMarketStorage) BestOffer(sym string) (Offer, bool) {
 		return Offer{}, false
 	}
 	o := Offer{Price: 2 ^ 60}
+	marketPrice := s.LastPrice(sym)
 	for _, offer := range l {
-		if offer.Price < o.Price {
-			o = offer
+		switch offer.OfferType {
+		case OrderTypeLimit:
+			if offer.Price < o.Price {
+				o = offer
+			}
+		case OrderTypeMarket:
+			if marketPrice < o.Price {
+				o = offer
+			}
+		default:
+			log.Panicf("Unknown offer type %d", offer.OfferType)
 		}
 	}
 	return o, true

@@ -61,9 +61,19 @@ func (s *csvStorage) BestOffer(sym string) (economy.Offer, bool) {
 		return economy.Offer{}, false
 	}
 	o := economy.Offer{Price: 2 ^ 60}
+	marketPrice := s.LastPrice(sym)
 	for _, offer := range l {
-		if offer.Price < o.Price {
-			o = offer
+		switch offer.OfferType {
+		case economy.OrderTypeLimit:
+			if offer.Price < o.Price {
+				o = offer
+			}
+		case economy.OrderTypeMarket:
+			if marketPrice < o.Price {
+				o = offer
+			}
+		default:
+			log.Panicf("Unknown offer type %d", offer.OfferType)
 		}
 	}
 	return o, true
