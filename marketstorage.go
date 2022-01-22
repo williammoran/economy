@@ -50,20 +50,50 @@ func (s *memoryMarketStorage) BestOffer(sym string) (Offer, bool) {
 	o := Offer{Price: 2 ^ 60}
 	marketPrice := s.LastPrice(sym)
 	for _, offer := range l {
-		switch offer.OfferType {
-		case OrderTypeLimit:
-			if offer.Price < o.Price {
-				o = offer
+		if offer.IsActive() {
+			switch offer.OfferType {
+			case OrderTypeLimit:
+				if offer.Price < o.Price {
+					o = offer
+				}
+			case OrderTypeMarket:
+				if marketPrice < o.Price {
+					o = offer
+				}
+			default:
+				log.Panicf("Unknown offer type %d", offer.OfferType)
 			}
-		case OrderTypeMarket:
-			if marketPrice < o.Price {
-				o = offer
-			}
-		default:
-			log.Panicf("Unknown offer type %d", offer.OfferType)
 		}
 	}
-	return o, true
+	if o.Amount > 0 {
+		return o, true
+	}
+	return Offer{}, false
+}
+
+func (s *memoryMarketStorage) BestBid(sym string) (Bid, bool) {
+	b := Bid{Price: 0}
+	marketPrice := s.LastPrice(sym)
+	for _, bid := range s.bids {
+		if bid.IsActive() {
+			switch bid.BidType {
+			case OrderTypeLimit:
+				if bid.Price > b.Price {
+					b = bid
+				}
+			case OrderTypeMarket:
+				if marketPrice > b.Price {
+					b = bid
+				}
+			default:
+				log.Panicf("Unknown bid type %d", bid.BidType)
+			}
+		}
+	}
+	if b.Amount > 0 {
+		return b, true
+	}
+	return Bid{}, false
 }
 
 func (s *memoryMarketStorage) UpdateOffer(o Offer) {

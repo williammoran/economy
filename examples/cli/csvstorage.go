@@ -63,20 +63,50 @@ func (s *csvStorage) BestOffer(sym string) (economy.Offer, bool) {
 	o := economy.Offer{Price: 2 ^ 60}
 	marketPrice := s.LastPrice(sym)
 	for _, offer := range l {
-		switch offer.OfferType {
-		case economy.OrderTypeLimit:
-			if offer.Price < o.Price {
-				o = offer
+		if offer.IsActive() {
+			switch offer.OfferType {
+			case economy.OrderTypeLimit:
+				if offer.Price < o.Price {
+					o = offer
+				}
+			case economy.OrderTypeMarket:
+				if marketPrice < o.Price {
+					o = offer
+				}
+			default:
+				log.Panicf("Unknown offer type %d", offer.OfferType)
 			}
-		case economy.OrderTypeMarket:
-			if marketPrice < o.Price {
-				o = offer
-			}
-		default:
-			log.Panicf("Unknown offer type %d", offer.OfferType)
 		}
 	}
-	return o, true
+	if o.Amount > 0 {
+		return o, true
+	}
+	return economy.Offer{}, false
+}
+
+func (s *csvStorage) BestBid(sym string) (economy.Bid, bool) {
+	b := economy.Bid{Price: 0}
+	marketPrice := s.LastPrice(sym)
+	for _, bid := range s.bids {
+		if bid.IsActive() {
+			switch bid.BidType {
+			case economy.OrderTypeLimit:
+				if bid.Price > b.Price {
+					b = bid
+				}
+			case economy.OrderTypeMarket:
+				if marketPrice > b.Price {
+					b = bid
+				}
+			default:
+				log.Panicf("Unknown bid type %d", bid.BidType)
+			}
+		}
+	}
+	if b.Amount > 0 {
+		return b, true
+	}
+	return economy.Bid{}, false
 }
 
 func (s *csvStorage) UpdateOffer(o economy.Offer) {
@@ -261,7 +291,7 @@ func savePrices(prices map[string]int64) {
 
 func (s *csvStorage) loadBids() {
 	s.bids = make(map[uuid.UUID]economy.Bid)
-	f, err := os.Open(priceFile)
+	f, err := os.Open(bidFile)
 	if err != nil {
 		return
 	}
@@ -280,8 +310,9 @@ func (s *csvStorage) loadBids() {
 			BidType: economy.OrderType(mustParseByte(record[1])),
 			Account: mustParseInt64(record[2]),
 			Symbol:  record[3],
-			Price:   mustParseInt64(record[2]),
-			Amount:  mustParseInt64(record[2]),
+			Price:   mustParseInt64(record[4]),
+			Amount:  mustParseInt64(record[5]),
+			NSF:     mustParseBool(record[6]),
 		}
 		s.bids[bid.ID] = bid
 	}
@@ -303,6 +334,7 @@ func saveBids(bids map[uuid.UUID]economy.Bid) {
 		r = append(r, bid.Symbol)
 		r = append(r, fmt.Sprintf("%d", bid.Price))
 		r = append(r, fmt.Sprintf("%d", bid.Amount))
+		r = append(r, fmt.Sprintf("%t", bid.NSF))
 		writer.Write(r)
 	}
 }
@@ -346,7 +378,7 @@ func saveTransactions(txs []economy.Transaction) {
 	for _, tx := range txs {
 		var r []string
 		r = append(r, tx.ID.String())
-		r = append(r, fmt.Sprintf("%d", tx.BidID))
+		r = append(r, tx.BidID.String())
 		r = append(r, tx.OfferID.String())
 		r = append(r, fmt.Sprintf("%d", tx.Price))
 		r = append(r, fmt.Sprintf("%d", tx.Amount))
@@ -365,6 +397,14 @@ func mustParseByte(v string) byte {
 
 func mustParseInt64(v string) int64 {
 	r, err := strconv.ParseInt(v, 10, 64)
+	if err != nil {
+		panic(err.Error())
+	}
+	return r
+}
+
+func mustParseBool(v string) bool {
+	r, err := strconv.ParseBool(v)
 	if err != nil {
 		panic(err.Error())
 	}

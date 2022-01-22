@@ -47,6 +47,36 @@ func (m *limitOrderProcessor) TryFillBid(
 	}
 }
 
+func (m *limitOrderProcessor) TrySell(
+	ms MarketStorage,
+	accounts Accounts,
+	opl map[OrderType]orderProcessor,
+	offer Offer,
+) {
+	for {
+		if offer.Amount < 1 {
+			ms.UpdateOffer(offer)
+			return
+		}
+		bid, found := ms.BestBid(offer.Symbol)
+		if !found {
+			ms.UpdateOffer(offer)
+			return
+		}
+		price := opl[bid.BidType].GetBidPrice(ms, bid)
+		if price <= offer.Price {
+			bid, _ = fillBid(ms, accounts, m.now(), bid, offer, price)
+		} else {
+			ms.UpdateOffer(offer)
+			return
+		}
+	}
+}
+
 func (m *limitOrderProcessor) GetAskingPrice(ms MarketStorage, o Offer) int64 {
 	return o.Price
+}
+
+func (m *limitOrderProcessor) GetBidPrice(ms MarketStorage, b Bid) int64 {
+	return b.Price
 }

@@ -18,6 +18,8 @@ func fillBid(
 	}
 	totalPrice := amount * price
 	if !accounts.DebitIfPossible(bid.Account, totalPrice) {
+		bid.NSF = true
+		ms.UpdateBid(bid)
 		return bid, false
 	}
 	accounts.Credit(off.Account, totalPrice)

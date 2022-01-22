@@ -15,6 +15,10 @@ type Offer struct {
 	Amount    int64
 }
 
+func (o Offer) IsActive() bool {
+	return o.Amount > 0
+}
+
 type OrderType byte
 
 const (
@@ -29,6 +33,11 @@ type Bid struct {
 	Symbol  string
 	Price   int64
 	Amount  int64
+	NSF     bool
+}
+
+func (b Bid) IsActive() bool {
+	return b.Amount > 0 && !b.NSF
 }
 
 type Transaction struct {
@@ -54,6 +63,7 @@ type MarketStorage interface {
 	// for the specified symbol, or false if there are
 	// no offers
 	BestOffer(string) (Offer, bool)
+	BestBid(string) (Bid, bool)
 	UpdateOffer(Offer)
 	AddBid(Bid) uuid.UUID
 	UpdateBid(Bid)
@@ -81,11 +91,14 @@ type Accounts interface {
 type orderProcessor interface {
 	TryFillBid(MarketStorage, Accounts, map[OrderType]orderProcessor, Bid)
 	GetAskingPrice(MarketStorage, Offer) int64
+	TrySell(MarketStorage, Accounts, map[OrderType]orderProcessor, Offer)
+	GetBidPrice(MarketStorage, Bid) int64
 }
 
 func MakeMarket(s MarketStorage, a Accounts) *Market {
 	return &Market{
-		storage: s,
+		storage:  s,
+		accounts: a,
 		orderProcessors: map[OrderType]orderProcessor{
 			OrderTypeMarket: &marketOrderProcessor{now: time.Now},
 			OrderTypeLimit:  &limitOrderProcessor{now: time.Now},
@@ -103,6 +116,9 @@ func (m *Market) Offer(o Offer) {
 	m.storage.Lock()
 	defer m.storage.Unlock()
 	m.storage.AddOffer(o)
+	m.orderProcessors[o.OfferType].TrySell(
+		m.storage, m.accounts, m.orderProcessors, o,
+	)
 }
 
 func (m *Market) Bid(b Bid) uuid.UUID {
