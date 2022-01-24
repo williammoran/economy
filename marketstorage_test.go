@@ -6,13 +6,12 @@ import (
 )
 
 const (
-	account = 99
-	sym     = "S"
+	sym = "S"
 )
 
 func TestAddOffer(t *testing.T) {
 	ms := MakeMemoryStorage()
-	offer := Offer{Account: account, Symbol: sym}
+	offer := Offer{Symbol: sym}
 	offer.ID = ms.AddOffer(offer)
 	r := ms.offers[sym][offer.ID]
 	if !reflect.DeepEqual(offer, r) {
@@ -22,7 +21,7 @@ func TestAddOffer(t *testing.T) {
 
 func TestBestOfferBasic(t *testing.T) {
 	ms := MakeMemoryStorage()
-	offer := Offer{Account: account, Symbol: sym, Amount: 10}
+	offer := Offer{Symbol: sym, Amount: 10}
 	offer.ID = ms.AddOffer(offer)
 	r, found := ms.BestOffer(sym)
 	if !found {
@@ -35,7 +34,7 @@ func TestBestOfferBasic(t *testing.T) {
 
 func TestBestOfferIgnoresEmpty(t *testing.T) {
 	ms := MakeMemoryStorage()
-	offer := Offer{Account: account, Symbol: sym, Amount: 0}
+	offer := Offer{Symbol: sym, Amount: 0}
 	offer.ID = ms.AddOffer(offer)
 	r, found := ms.BestOffer(sym)
 	if found {
@@ -45,9 +44,9 @@ func TestBestOfferIgnoresEmpty(t *testing.T) {
 
 func TestBestOfferSelectsCorrectly(t *testing.T) {
 	ms := MakeMemoryStorage()
-	offer0 := Offer{Account: account, Symbol: sym, Amount: 10, Price: 5, OfferType: OrderTypeLimit}
+	offer0 := Offer{Symbol: sym, Amount: 10, Price: 5, OfferType: OrderTypeLimit}
 	offer0.ID = ms.AddOffer(offer0)
-	offer1 := Offer{Account: account, Symbol: sym, Amount: 10, Price: 2, OfferType: OrderTypeLimit}
+	offer1 := Offer{Symbol: sym, Amount: 10, Price: 2, OfferType: OrderTypeLimit}
 	offer1.ID = ms.AddOffer(offer1)
 	r, found := ms.BestOffer(sym)
 	if !found {
@@ -60,9 +59,9 @@ func TestBestOfferSelectsCorrectly(t *testing.T) {
 
 func TestBestOfferSelectsNonEmpty(t *testing.T) {
 	ms := MakeMemoryStorage()
-	offer0 := Offer{Account: account, Symbol: sym, Amount: 10, Price: 5, OfferType: OrderTypeLimit}
+	offer0 := Offer{Symbol: sym, Amount: 10, Price: 5, OfferType: OrderTypeLimit}
 	offer0.ID = ms.AddOffer(offer0)
-	offer1 := Offer{Account: account, Symbol: sym, Amount: 0, Price: 2, OfferType: OrderTypeLimit}
+	offer1 := Offer{Symbol: sym, Amount: 0, Price: 2, OfferType: OrderTypeLimit}
 	offer1.ID = ms.AddOffer(offer1)
 	r, found := ms.BestOffer(sym)
 	if !found {
@@ -75,7 +74,7 @@ func TestBestOfferSelectsNonEmpty(t *testing.T) {
 
 func TestBestBidBasic(t *testing.T) {
 	ms := MakeMemoryStorage()
-	bid := Bid{Account: account, Symbol: sym, Amount: 10}
+	bid := Bid{Symbol: sym, Amount: 10}
 	bid.ID = ms.AddBid(bid)
 	r, found := ms.BestBid(sym)
 	if !found {
@@ -83,5 +82,45 @@ func TestBestBidBasic(t *testing.T) {
 	}
 	if !reflect.DeepEqual(bid, r) {
 		t.Fatalf("%+v != %+v", r, bid)
+	}
+}
+
+func TestBestBidIgnoresEmpty(t *testing.T) {
+	ms := MakeMemoryStorage()
+	bid := Bid{Symbol: sym, Amount: 0}
+	bid.ID = ms.AddBid(bid)
+	r, found := ms.BestBid(sym)
+	if found {
+		t.Fatalf("Should not have been found: %+v", r)
+	}
+}
+
+func TestBestBidSelectsCorrectly(t *testing.T) {
+	ms := MakeMemoryStorage()
+	bid0 := Bid{Symbol: sym, Amount: 10, Price: 5, BidType: OrderTypeLimit}
+	bid0.ID = ms.AddBid(bid0)
+	bid1 := Bid{Symbol: sym, Amount: 10, Price: 7, BidType: OrderTypeLimit}
+	bid1.ID = ms.AddBid(bid1)
+	r, found := ms.BestBid(sym)
+	if !found {
+		t.Fatal("Not Found")
+	}
+	if !reflect.DeepEqual(bid1, r) {
+		t.Fatalf("Incorrectly found %+v", r)
+	}
+}
+
+func TestBestBidSelectsNonempty(t *testing.T) {
+	ms := MakeMemoryStorage()
+	bid0 := Bid{Symbol: sym, Amount: 10, Price: 5, BidType: OrderTypeLimit}
+	bid0.ID = ms.AddBid(bid0)
+	bid1 := Bid{Symbol: sym, Amount: 0, Price: 7, BidType: OrderTypeLimit}
+	bid1.ID = ms.AddBid(bid1)
+	r, found := ms.BestBid(sym)
+	if !found {
+		t.Fatal("Not Found")
+	}
+	if !reflect.DeepEqual(bid0, r) {
+		t.Fatalf("Incorrectly found %+v", r)
 	}
 }
