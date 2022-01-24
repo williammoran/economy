@@ -120,10 +120,19 @@ func TestTrySellFillsExactMatch(t *testing.T) {
 }
 
 func TestTrySellNoBidsCompletes(t *testing.T) {
+	if time.Now().After(time.Unix(1643463021, 0)) {
+		t.Fatal("Write this test")
+	}
 }
 
 func TestTrySell2BidsSell(t *testing.T) {
+	if time.Now().After(time.Unix(1643463021, 0)) {
+		t.Fatal("Write this test")
+	}
 }
 
 func TestTrySellPartialBidCompletesAndDecrimentsOffer(t *testing.T) {
+	if time.Now().After(time.Unix(1643463021, 0)) {
+		t.Fatal("Write this test")
+	}
 }
