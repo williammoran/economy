@@ -66,6 +66,7 @@ func (m *limitOrderProcessor) TrySell(
 		price := opl[bid.BidType].GetBidPrice(ms, bid)
 		if price <= offer.Price {
 			bid, _ = fillBid(ms, accounts, m.now(), bid, offer, price)
+			ms.UpdateBid(bid)
 		} else {
 			ms.UpdateOffer(offer)
 			return

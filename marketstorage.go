@@ -1,6 +1,7 @@
 package economy
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
@@ -98,11 +99,10 @@ func (s *memoryMarketStorage) BestBid(sym string) (Bid, bool) {
 
 func (s *memoryMarketStorage) UpdateOffer(o Offer) {
 	l := s.offers[o.Symbol]
-	if o.Amount > 0 {
-		l[o.ID] = o
-	} else {
-		delete(l, o.ID)
+	if l == nil {
+		l = make(map[uuid.UUID]Offer)
 	}
+	l[o.ID] = o
 	s.offers[o.Symbol] = l
 }
 
@@ -119,9 +119,18 @@ func (s *memoryMarketStorage) UpdateBid(b Bid) {
 func (s *memoryMarketStorage) GetBid(id uuid.UUID) Bid {
 	bid, found := s.bids[id]
 	if !found {
-		log.Panicf("Bid %d not found", id)
+		log.Panicf("Bid %s not found", id)
 	}
 	return bid
+}
+
+func (s *memoryMarketStorage) GetOffer(id uuid.UUID) Offer {
+	for _, l := range s.offers {
+		if offer, found := l[id]; found {
+			return offer
+		}
+	}
+	panic(fmt.Sprintf("Offer %s not found", id))
 }
 
 func (s *memoryMarketStorage) NewTransaction(t Transaction) {

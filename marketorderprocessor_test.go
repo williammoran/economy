@@ -89,7 +89,7 @@ func TestTryFillFilledBy2Offers(t *testing.T) {
 	if bid.Amount != 0 {
 		t.Fatalf("%+v", bid)
 	}
-	if len(storage.offers["m"]) > 1 {
+	if len(storage.offers["m"]) != 2 {
 		t.Fatalf("%+v", storage.offers["m"])
 	}
 	var total int64
@@ -99,4 +99,31 @@ func TestTryFillFilledBy2Offers(t *testing.T) {
 	if total != 6 {
 		t.Fatalf("%d remaining", total)
 	}
+}
+
+func TestTrySellFillsExactMatch(t *testing.T) {
+	mop := marketOrderProcessor{now: func() time.Time { return time.Time{} }}
+	storage := makeMemoryMarketStorage()
+	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeMarket}
+	bid.ID = storage.AddBid(bid)
+	offer := Offer{Symbol: "m", Amount: 10, OfferType: OrderTypeMarket}
+	offer.ID = storage.AddOffer(offer)
+	mop.TrySell(storage, makeMockAccounts(), map[OrderType]orderProcessor{OrderTypeMarket: &mop}, offer)
+	bid = storage.GetBid(bid.ID)
+	if bid.IsActive() {
+		t.Fatal("Bid still active")
+	}
+	offer = storage.GetOffer(offer.ID)
+	if offer.IsActive() {
+		t.Fatal("Offer still active")
+	}
+}
+
+func TestTrySellNoBidsCompletes(t *testing.T) {
+}
+
+func TestTrySell2BidsSell(t *testing.T) {
+}
+
+func TestTrySellPartialBidCompletesAndDecrimentsOffer(t *testing.T) {
 }

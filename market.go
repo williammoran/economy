@@ -68,6 +68,7 @@ type MarketStorage interface {
 	AddBid(Bid) uuid.UUID
 	UpdateBid(Bid)
 	GetBid(uuid.UUID) Bid
+	GetOffer(uuid.UUID) Offer
 	NewTransaction(Transaction)
 	LastPrice(string) int64
 	SetLastPrice(string, int64)
@@ -115,7 +116,7 @@ type Market struct {
 func (m *Market) Offer(o Offer) {
 	m.storage.Lock()
 	defer m.storage.Unlock()
-	m.storage.AddOffer(o)
+	o.ID = m.storage.AddOffer(o)
 	m.orderProcessors[o.OfferType].TrySell(
 		m.storage, m.accounts, m.orderProcessors, o,
 	)

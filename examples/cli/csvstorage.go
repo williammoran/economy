@@ -111,11 +111,10 @@ func (s *csvStorage) BestBid(sym string) (economy.Bid, bool) {
 
 func (s *csvStorage) UpdateOffer(o economy.Offer) {
 	l := s.offers[o.Symbol]
-	if o.Amount > 0 {
-		l[o.ID] = o
-	} else {
-		delete(l, o.ID)
+	if l == nil {
+		l = make(map[uuid.UUID]economy.Offer)
 	}
+	l[o.ID] = o
 	s.offers[o.Symbol] = l
 }
 

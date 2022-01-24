@@ -50,6 +50,8 @@ func (m *marketOrderProcessor) TrySell(
 		}
 		price := opl[bid.BidType].GetBidPrice(ms, bid)
 		bid, _ = fillBid(ms, accounts, m.now(), bid, offer, price)
+		ms.UpdateBid(bid)
+		offer = ms.GetOffer(offer.ID)
 	}
 }
 
