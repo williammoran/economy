@@ -64,7 +64,9 @@ func writeEOF(w io.Writer) {
 func (s *MemoryStorage) UnMarshal(r io.Reader) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	offers := loadOffers(r)
+	reader := csv.NewReader(r)
+	reader.FieldsPerRecord = -1
+	offers := loadOffers(reader)
 	s.offers = make(map[string]map[uuid.UUID]Offer)
 	for _, o := range offers {
 		oList := s.offers[o.Symbol]
@@ -74,9 +76,9 @@ func (s *MemoryStorage) UnMarshal(r io.Reader) {
 		oList[o.ID] = o
 		s.offers[o.Symbol] = oList
 	}
-	s.bids = loadBids(r)
-	s.lastPrice = loadPrices(r)
-	s.transactions = loadTransactions(r)
+	s.lastPrice = loadPrices(reader)
+	s.bids = loadBids(reader)
+	s.transactions = loadTransactions(reader)
 }
 
 func (s *MemoryStorage) AddOffer(o Offer) uuid.UUID {
@@ -178,7 +180,7 @@ func (s *MemoryStorage) GetOffer(id uuid.UUID) Offer {
 			return bid
 		}
 	}
-	panic(fmt.Sprintf("Bid %d not found", id))
+	panic(fmt.Sprintf("Offer %d not found", id))
 }
 
 func (s *MemoryStorage) NewTransaction(t Transaction) {
@@ -215,9 +217,8 @@ func (s *MemoryStorage) AllSymbols() []string {
 	return rv
 }
 
-func loadOffers(r io.Reader) map[uuid.UUID]Offer {
+func loadOffers(reader *csv.Reader) map[uuid.UUID]Offer {
 	offers := make(map[uuid.UUID]Offer)
-	reader := csv.NewReader(r)
 	for {
 		record, err := reader.Read()
 		if err != nil {
@@ -256,9 +257,8 @@ func saveOffers(w io.Writer, offers map[uuid.UUID]Offer) {
 	}
 }
 
-func loadPrices(r io.Reader) map[string]int64 {
+func loadPrices(reader *csv.Reader) map[string]int64 {
 	prices := make(map[string]int64)
-	reader := csv.NewReader(r)
 	for {
 		record, err := reader.Read()
 		if err != nil {
@@ -286,8 +286,7 @@ func savePrices(w io.Writer, prices map[string]int64) {
 	}
 }
 
-func loadBids(r io.Reader) map[uuid.UUID]Bid {
-	reader := csv.NewReader(r)
+func loadBids(reader *csv.Reader) map[uuid.UUID]Bid {
 	bids := make(map[uuid.UUID]Bid)
 	for {
 		record, err := reader.Read()
@@ -329,9 +328,8 @@ func saveBids(w io.Writer, bids map[uuid.UUID]Bid) {
 	}
 }
 
-func loadTransactions(r io.Reader) []Transaction {
+func loadTransactions(reader *csv.Reader) []Transaction {
 	var txs []Transaction
-	reader := csv.NewReader(r)
 	for {
 		record, err := reader.Read()
 		if err != nil {
@@ -343,13 +341,18 @@ func loadTransactions(r io.Reader) []Transaction {
 			}
 			log.Panicf("Invalid record %+v", record)
 		}
+		date := time.Time{}
+		err = date.UnmarshalText([]byte(record[5]))
+		if err != nil {
+			panic(err.Error())
+		}
 		tx := Transaction{
 			ID:      uuid.MustParse(record[0]),
 			BidID:   uuid.MustParse(record[1]),
 			OfferID: uuid.MustParse(record[2]),
 			Price:   mustParseInt64(record[3]),
 			Amount:  mustParseInt64(record[4]),
-			Date:    time.UnixMilli(mustParseInt64(record[5])),
+			Date:    date,
 		}
 		txs = append(txs, tx)
 	}
@@ -359,13 +362,17 @@ func saveTransactions(w io.Writer, txs []Transaction) {
 	writer := csv.NewWriter(w)
 	defer writer.Flush()
 	for _, tx := range txs {
+		dateText, err := tx.Date.MarshalText()
+		if err != nil {
+			panic(err.Error())
+		}
 		var r []string
 		r = append(r, tx.ID.String())
 		r = append(r, tx.BidID.String())
 		r = append(r, tx.OfferID.String())
 		r = append(r, fmt.Sprintf("%d", tx.Price))
 		r = append(r, fmt.Sprintf("%d", tx.Amount))
-		r = append(r, fmt.Sprintf("%d", tx.Date.UnixMilli()))
+		r = append(r, string(dateText))
 		writer.Write(r)
 	}
 }
