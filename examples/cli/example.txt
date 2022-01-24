@@ -1,0 +1,8 @@
+account 1 10000
+account 2 10000
+offer 1 IBM 100 limit 10
+offer 2 VZ 100
+bid 1 VZ 10 limit 10
+bid 2 IBM 10
+accounts
+market

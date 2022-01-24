@@ -7,7 +7,7 @@ import (
 
 func TestNoTransactionWhenLimitPriceTooHigh(t *testing.T) {
 	mop := limitOrderProcessor{now: func() time.Time { return time.Time{} }}
-	storage := makeMemoryMarketStorage()
+	storage := MakeMemoryStorage()
 	o := Offer{OfferType: OrderTypeLimit, Symbol: "m", Amount: 10, Price: 20}
 	storage.AddOffer(o)
 	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeLimit, Price: 10}
@@ -25,7 +25,7 @@ func TestNoTransactionWhenLimitPriceTooHigh(t *testing.T) {
 
 func TestSatisfiesAtMarketPriceInBetween(t *testing.T) {
 	mop := limitOrderProcessor{now: func() time.Time { return time.Time{} }}
-	storage := makeMemoryMarketStorage()
+	storage := MakeMemoryStorage()
 	o := Offer{OfferType: OrderTypeLimit, Symbol: "m", Amount: 10, Price: 10}
 	storage.AddOffer(o)
 	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeLimit, Price: 20}
@@ -45,7 +45,7 @@ func TestSatisfiesAtMarketPriceInBetween(t *testing.T) {
 
 func TestSatisfiesAtBidWhenMarketHigh(t *testing.T) {
 	mop := limitOrderProcessor{now: func() time.Time { return time.Time{} }}
-	storage := makeMemoryMarketStorage()
+	storage := MakeMemoryStorage()
 	o := Offer{OfferType: OrderTypeLimit, Symbol: "m", Amount: 10, Price: 10}
 	storage.AddOffer(o)
 	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeLimit, Price: 20}
@@ -65,7 +65,7 @@ func TestSatisfiesAtBidWhenMarketHigh(t *testing.T) {
 
 func TestSatisfiesAtOfferWhenMarketLow(t *testing.T) {
 	mop := limitOrderProcessor{now: func() time.Time { return time.Time{} }}
-	storage := makeMemoryMarketStorage()
+	storage := MakeMemoryStorage()
 	o := Offer{OfferType: OrderTypeLimit, Symbol: "m", Amount: 10, Price: 10}
 	storage.AddOffer(o)
 	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeLimit, Price: 20}

@@ -7,7 +7,7 @@ import (
 
 func TestTryFillFilledByExactOffer(t *testing.T) {
 	mop := marketOrderProcessor{now: func() time.Time { return time.Time{} }}
-	storage := makeMemoryMarketStorage()
+	storage := MakeMemoryStorage()
 	o := Offer{Symbol: "m", Amount: 10, Price: 20}
 	storage.AddOffer(o)
 	t.Logf("%+v", storage.offers)
@@ -27,7 +27,7 @@ func TestTryFillFilledByExactOffer(t *testing.T) {
 
 func TestTryFillFilledByLargerOffer(t *testing.T) {
 	mop := marketOrderProcessor{now: func() time.Time { return time.Time{} }}
-	storage := makeMemoryMarketStorage()
+	storage := MakeMemoryStorage()
 	o := Offer{Symbol: "m", Amount: 20, Price: 20}
 	storage.AddOffer(o)
 	t.Logf("%+v", storage.offers)
@@ -52,7 +52,7 @@ func TestTryFillFilledByLargerOffer(t *testing.T) {
 
 func TestTryFillPartiallyFilled(t *testing.T) {
 	mop := marketOrderProcessor{now: func() time.Time { return time.Time{} }}
-	storage := makeMemoryMarketStorage()
+	storage := MakeMemoryStorage()
 	o := Offer{Symbol: "m", Amount: 5, Price: 20}
 	storage.AddOffer(o)
 	t.Logf("%+v", storage.offers)
@@ -75,7 +75,7 @@ func TestTryFillPartiallyFilled(t *testing.T) {
 
 func TestTryFillFilledBy2Offers(t *testing.T) {
 	mop := marketOrderProcessor{now: func() time.Time { return time.Time{} }}
-	storage := makeMemoryMarketStorage()
+	storage := MakeMemoryStorage()
 	o := Offer{Symbol: "m", Amount: 8, Price: 20}
 	storage.AddOffer(o)
 	o = Offer{Symbol: "m", Amount: 8, Price: 20}
@@ -103,7 +103,7 @@ func TestTryFillFilledBy2Offers(t *testing.T) {
 
 func TestTrySellFillsExactMatch(t *testing.T) {
 	mop := marketOrderProcessor{now: func() time.Time { return time.Time{} }}
-	storage := makeMemoryMarketStorage()
+	storage := MakeMemoryStorage()
 	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeMarket}
 	bid.ID = storage.AddBid(bid)
 	offer := Offer{Symbol: "m", Amount: 10, OfferType: OrderTypeMarket}

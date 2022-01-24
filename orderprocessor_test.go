@@ -6,7 +6,7 @@ import (
 )
 
 func TestFillBidFilledByExactOffer(t *testing.T) {
-	storage := makeMemoryMarketStorage()
+	storage := MakeMemoryStorage()
 	o := Offer{Symbol: "m", Amount: 10}
 	offerID := storage.AddOffer(o)
 	o.ID = offerID
@@ -27,7 +27,7 @@ func TestFillBidFilledByExactOffer(t *testing.T) {
 }
 
 func TestFillBidFilledByLargerOffer(t *testing.T) {
-	storage := makeMemoryMarketStorage()
+	storage := MakeMemoryStorage()
 	o := Offer{Symbol: "m", Amount: 20}
 	offerID := storage.AddOffer(o)
 	o.ID = offerID
@@ -48,7 +48,7 @@ func TestFillBidFilledByLargerOffer(t *testing.T) {
 }
 
 func TestFillBidPartiallyFilled(t *testing.T) {
-	storage := makeMemoryMarketStorage()
+	storage := MakeMemoryStorage()
 	o := Offer{Symbol: "m", Amount: 5}
 	offerID := storage.AddOffer(o)
 	o.ID = offerID
@@ -69,7 +69,7 @@ func TestFillBidPartiallyFilled(t *testing.T) {
 }
 
 func TestFillBidExchangesFunds(t *testing.T) {
-	storage := makeMemoryMarketStorage()
+	storage := MakeMemoryStorage()
 	accounts := makeMockAccounts()
 	o := Offer{Symbol: "m", Amount: 10, Account: 1}
 	offerID := storage.AddOffer(o)
@@ -91,7 +91,7 @@ func TestFillBidExchangesFunds(t *testing.T) {
 }
 
 func TestFillBidRejectsOnNoFunds(t *testing.T) {
-	storage := makeMemoryMarketStorage()
+	storage := MakeMemoryStorage()
 	accounts := makeMockAccounts()
 	accounts.rejects[2] = true
 	o := Offer{Symbol: "m", Amount: 10, Account: 1}

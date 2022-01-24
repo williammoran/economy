@@ -42,7 +42,7 @@ market - List current prices of all known symbols
 
 func main() {
 	accounts := makeAccounts()
-	market := economy.MakeMarket(makeCsvStorage(), accounts)
+	market := economy.MakeMarket(economy.MakeMemoryStorage(), accounts)
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		tokens := nextCommand(reader)
