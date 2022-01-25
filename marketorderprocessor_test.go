@@ -120,19 +120,61 @@ func TestTrySellFillsExactMatch(t *testing.T) {
 }
 
 func TestTrySellNoBidsCompletes(t *testing.T) {
-	if time.Now().After(time.Unix(1643463021, 0)) {
-		t.Fatal("Write this test")
+	mop := marketOrderProcessor{now: func() time.Time { return time.Time{} }}
+	storage := MakeMemoryStorage()
+	offer := Offer{Symbol: "m", Amount: 10, OfferType: OrderTypeMarket}
+	offer.ID = storage.AddOffer(offer)
+	mop.TrySell(storage, makeMockAccounts(), map[OrderType]orderProcessor{OrderTypeMarket: &mop}, offer)
+	offer = storage.GetOffer(offer.ID)
+	if !offer.IsActive() {
+		t.Fatal("Offer not active")
+	}
+	if offer.Amount != 10 {
+		t.Fatalf("%+v", offer)
 	}
 }
 
 func TestTrySell2BidsSell(t *testing.T) {
-	if time.Now().After(time.Unix(1643463021, 0)) {
-		t.Fatal("Write this test")
+	mop := marketOrderProcessor{now: func() time.Time { return time.Time{} }}
+	storage := MakeMemoryStorage()
+	bid0 := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeMarket}
+	bid0.ID = storage.AddBid(bid0)
+	bid1 := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeMarket}
+	bid1.ID = storage.AddBid(bid1)
+	offer := Offer{Symbol: "m", Amount: 20, OfferType: OrderTypeMarket}
+	offer.ID = storage.AddOffer(offer)
+	mop.TrySell(storage, makeMockAccounts(), map[OrderType]orderProcessor{OrderTypeMarket: &mop}, offer)
+	bid0 = storage.GetBid(bid0.ID)
+	if bid0.IsActive() {
+		t.Fatal("Bid0 still active")
+	}
+	bid1 = storage.GetBid(bid1.ID)
+	if bid1.IsActive() {
+		t.Fatal("Bid1 still active")
+	}
+	offer = storage.GetOffer(offer.ID)
+	if offer.IsActive() {
+		t.Fatal("Offer still active")
 	}
 }
 
 func TestTrySellPartialBidCompletesAndDecrimentsOffer(t *testing.T) {
-	if time.Now().After(time.Unix(1643463021, 0)) {
-		t.Fatal("Write this test")
+	mop := marketOrderProcessor{now: func() time.Time { return time.Time{} }}
+	storage := MakeMemoryStorage()
+	bid := Bid{Symbol: "m", Amount: 5, BidType: OrderTypeMarket}
+	bid.ID = storage.AddBid(bid)
+	offer := Offer{Symbol: "m", Amount: 10, OfferType: OrderTypeMarket}
+	offer.ID = storage.AddOffer(offer)
+	mop.TrySell(storage, makeMockAccounts(), map[OrderType]orderProcessor{OrderTypeMarket: &mop}, offer)
+	bid = storage.GetBid(bid.ID)
+	if bid.IsActive() {
+		t.Fatal("Bid still active")
+	}
+	offer = storage.GetOffer(offer.ID)
+	if !offer.IsActive() {
+		t.Fatal("Offer inactive")
+	}
+	if offer.Amount != 5 {
+		t.Fatalf("Wrong remaining amount: %+v", offer)
 	}
 }
