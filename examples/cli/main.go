@@ -42,7 +42,8 @@ market - List current prices of all known symbols
 
 func main() {
 	accounts := makeAccounts()
-	market := economy.MakeMarket(economy.MakeMemoryStorage(), accounts)
+	storage := economy.MakeMemoryStorage()
+	market := economy.MakeMarket(storage, accounts)
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		tokens := nextCommand(reader)
@@ -58,10 +59,15 @@ func main() {
 		case "accounts":
 			showAccounts(accounts)
 		case "bid":
+			load(storage)
 			bid(tokens[1:], market)
+			save(storage)
 		case "offer":
+			load(storage)
 			offer(tokens[1:], market)
+			save(storage)
 		case "market":
+			load(storage)
 			showMarket(market)
 		default:
 			fmt.Printf("Unrecognized command '%s'\n", command)
@@ -206,4 +212,24 @@ func parseInt64(in, msg string) (int64, bool) {
 		return 0, false
 	}
 	return id, true
+}
+
+const filename = "economy.data"
+
+func load(s *economy.MemoryStorage) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	s.UnMarshal(f)
+}
+
+func save(s *economy.MemoryStorage) {
+	f, err := os.Create(filename)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	s.Marshal(f)
 }
