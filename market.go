@@ -63,6 +63,8 @@ type MarketStorage interface {
 	// for the specified symbol, or false if there are
 	// no offers
 	BestOffer(string) (Offer, bool)
+	// BestBid returns the bid with the highest price for
+	// the specified symbol, or false if no bids
 	BestBid(string) (Bid, bool)
 	UpdateOffer(Offer)
 	AddBid(Bid) uuid.UUID
