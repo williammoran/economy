@@ -78,9 +78,22 @@ func TestBestOfferSelectsNonEmpty(t *testing.T) {
 	}
 }
 
-func TestBestBidBasic(t *testing.T) {
+func TestBestBidMarketBasic(t *testing.T) {
 	ms := MakeMemoryStorage()
 	bid := Bid{Symbol: sym, Amount: 10}
+	bid.ID = ms.AddBid(bid)
+	r, found := ms.BestBid(sym)
+	if !found {
+		t.Fatal("Not found")
+	}
+	if !reflect.DeepEqual(bid, r) {
+		t.Fatalf("%+v != %+v", r, bid)
+	}
+}
+
+func TestBestBidLimitBasic(t *testing.T) {
+	ms := MakeMemoryStorage()
+	bid := Bid{Symbol: sym, Amount: 10, BidType: OrderTypeLimit, Price: 5}
 	bid.ID = ms.AddBid(bid)
 	r, found := ms.BestBid(sym)
 	if !found {

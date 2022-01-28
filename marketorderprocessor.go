@@ -14,19 +14,16 @@ func (m *marketOrderProcessor) TryFillBid(
 ) {
 	for {
 		if bid.Amount < 1 {
-			ms.UpdateBid(bid)
 			return
 		}
 		off, found := ms.BestOffer(bid.Symbol)
 		if !found {
-			ms.UpdateBid(bid)
 			return
 		}
 		price := opl[off.OfferType].GetAskingPrice(ms, off)
 		var filled bool
-		bid, filled = fillBid(ms, accounts, m.now(), bid, off, price)
+		bid, _, filled = fillBid(ms, accounts, m.now(), bid, off, price)
 		if !filled {
-			ms.UpdateBid(bid)
 			return
 		}
 	}
@@ -40,18 +37,14 @@ func (m *marketOrderProcessor) TrySell(
 ) {
 	for {
 		if offer.Amount < 1 {
-			ms.UpdateOffer(offer)
 			return
 		}
 		bid, found := ms.BestBid(offer.Symbol)
 		if !found {
-			ms.UpdateOffer(offer)
 			return
 		}
 		price := opl[bid.BidType].GetBidPrice(ms, bid)
-		bid, _ = fillBid(ms, accounts, m.now(), bid, offer, price)
-		ms.UpdateBid(bid)
-		offer = ms.GetOffer(offer.ID)
+		_, offer, _ = fillBid(ms, accounts, m.now(), bid, offer, price)
 	}
 }
 

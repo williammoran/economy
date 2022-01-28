@@ -82,3 +82,81 @@ func TestSatisfiesAtOfferWhenMarketLow(t *testing.T) {
 		t.Fatalf("%+v", tx)
 	}
 }
+
+func TestLimitTrySellFillsExactMatch(t *testing.T) {
+	mop := limitOrderProcessor{now: func() time.Time { return time.Time{} }}
+	storage := MakeMemoryStorage()
+	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeLimit, Price: 5}
+	bid.ID = storage.AddBid(bid)
+	offer := Offer{Symbol: "m", Amount: 10, OfferType: OrderTypeLimit, Price: 5}
+	offer.ID = storage.AddOffer(offer)
+	mop.TrySell(storage, makeMockAccounts(), map[OrderType]orderProcessor{OrderTypeLimit: &mop}, offer)
+	bid = storage.GetBid(bid.ID)
+	if bid.IsActive() {
+		t.Fatalf("Bid still active: %+v", bid)
+	}
+	offer = storage.GetOffer(offer.ID)
+	if offer.IsActive() {
+		t.Fatalf("Offer still active: %+v", offer)
+	}
+}
+
+func TestLimitTrySellNoBidsCompletes(t *testing.T) {
+	mop := limitOrderProcessor{now: func() time.Time { return time.Time{} }}
+	storage := MakeMemoryStorage()
+	offer := Offer{Symbol: "m", Amount: 10, OfferType: OrderTypeLimit}
+	offer.ID = storage.AddOffer(offer)
+	mop.TrySell(storage, makeMockAccounts(), map[OrderType]orderProcessor{OrderTypeLimit: &mop}, offer)
+	offer = storage.GetOffer(offer.ID)
+	if !offer.IsActive() {
+		t.Fatal("Offer not active")
+	}
+	if offer.Amount != 10 {
+		t.Fatalf("%+v", offer)
+	}
+}
+
+func TestLimitTrySell2BidsSell(t *testing.T) {
+	mop := limitOrderProcessor{now: func() time.Time { return time.Time{} }}
+	storage := MakeMemoryStorage()
+	bid0 := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeLimit, Price: 1}
+	bid0.ID = storage.AddBid(bid0)
+	bid1 := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeLimit, Price: 1}
+	bid1.ID = storage.AddBid(bid1)
+	offer := Offer{Symbol: "m", Amount: 20, OfferType: OrderTypeLimit, Price: 1}
+	offer.ID = storage.AddOffer(offer)
+	mop.TrySell(storage, makeMockAccounts(), map[OrderType]orderProcessor{OrderTypeLimit: &mop}, offer)
+	bid0 = storage.GetBid(bid0.ID)
+	if bid0.IsActive() {
+		t.Fatalf("Bid0 still active: %+v", bid0)
+	}
+	bid1 = storage.GetBid(bid1.ID)
+	if bid1.IsActive() {
+		t.Fatal("Bid1 still active")
+	}
+	offer = storage.GetOffer(offer.ID)
+	if offer.IsActive() {
+		t.Fatalf("Offer still active: %+v", offer)
+	}
+}
+
+func TestLimitTrySellPartialBidCompletesAndDecrimentsOffer(t *testing.T) {
+	mop := limitOrderProcessor{now: func() time.Time { return time.Time{} }}
+	storage := MakeMemoryStorage()
+	bid := Bid{Symbol: "m", Amount: 5, BidType: OrderTypeLimit, Price: 1}
+	bid.ID = storage.AddBid(bid)
+	offer := Offer{Symbol: "m", Amount: 10, OfferType: OrderTypeLimit, Price: 1}
+	offer.ID = storage.AddOffer(offer)
+	mop.TrySell(storage, makeMockAccounts(), map[OrderType]orderProcessor{OrderTypeLimit: &mop}, offer)
+	bid = storage.GetBid(bid.ID)
+	if bid.IsActive() {
+		t.Fatalf("Bid still active: %+v", bid)
+	}
+	offer = storage.GetOffer(offer.ID)
+	if !offer.IsActive() {
+		t.Fatal("Offer inactive")
+	}
+	if offer.Amount != 5 {
+		t.Fatalf("Wrong remaining amount: %+v", offer)
+	}
+}

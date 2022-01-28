@@ -122,26 +122,26 @@ func (s *MemoryStorage) BestOffer(sym string) (Offer, bool) {
 }
 
 func (s *MemoryStorage) BestBid(sym string) (Bid, bool) {
-	b := Bid{Price: 0}
+	result := Bid{Price: 0}
 	marketPrice := s.LastPrice(sym)
 	for _, bid := range s.bids {
 		if bid.IsActive() {
 			switch bid.BidType {
 			case OrderTypeLimit:
-				if bid.Price > b.Price {
-					b = bid
+				if bid.Price > result.Price {
+					result = bid
 				}
 			case OrderTypeMarket:
-				if marketPrice > b.Price {
-					b = bid
+				if marketPrice > result.Price {
+					result = bid
 				}
 			default:
 				log.Panicf("Unknown bid type %d", bid.BidType)
 			}
 		}
 	}
-	if b.Amount > 0 {
-		return b, true
+	if result.Amount > 0 {
+		return result, true
 	}
 	return Bid{}, false
 }

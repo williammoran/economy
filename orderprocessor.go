@@ -9,7 +9,7 @@ func fillBid(
 	bid Bid,
 	off Offer,
 	price int64,
-) (Bid, bool) {
+) (Bid, Offer, bool) {
 	var amount int64
 	if off.Amount <= bid.Amount {
 		amount = off.Amount
@@ -20,7 +20,7 @@ func fillBid(
 	if !accounts.DebitIfPossible(bid.Account, totalPrice) {
 		bid.NSF = true
 		ms.UpdateBid(bid)
-		return bid, false
+		return bid, off, false
 	}
 	accounts.Credit(off.Account, totalPrice)
 	if off.Amount <= bid.Amount {
@@ -40,6 +40,7 @@ func fillBid(
 		},
 	)
 	ms.UpdateOffer(off)
+	ms.UpdateBid(bid)
 	ms.SetLastPrice(off.Symbol, price)
-	return bid, true
+	return bid, off, true
 }

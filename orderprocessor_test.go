@@ -13,7 +13,7 @@ func TestFillBidFilledByExactOffer(t *testing.T) {
 	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeMarket}
 	id := storage.AddBid(bid)
 	bid.ID = id
-	bid, _ = fillBid(storage, makeMockAccounts(), time.Time{}, bid, o, 7)
+	bid, o, _ = fillBid(storage, makeMockAccounts(), time.Time{}, bid, o, 7)
 	if bid.Amount != 0 {
 		t.Fatalf("%+v", bid)
 	}
@@ -34,7 +34,7 @@ func TestFillBidFilledByLargerOffer(t *testing.T) {
 	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeMarket}
 	id := storage.AddBid(bid)
 	bid.ID = id
-	bid, _ = fillBid(storage, makeMockAccounts(), time.Time{}, bid, o, 7)
+	bid, o, _ = fillBid(storage, makeMockAccounts(), time.Time{}, bid, o, 7)
 	if bid.Amount != 0 {
 		t.Fatalf("%+v", bid)
 	}
@@ -55,7 +55,7 @@ func TestFillBidPartiallyFilled(t *testing.T) {
 	bid := Bid{Symbol: "m", Amount: 10, BidType: OrderTypeMarket}
 	id := storage.AddBid(bid)
 	bid.ID = id
-	bid, _ = fillBid(storage, makeMockAccounts(), time.Time{}, bid, o, 7)
+	bid, o, _ = fillBid(storage, makeMockAccounts(), time.Time{}, bid, o, 7)
 	if bid.Amount != 5 {
 		t.Fatalf("%+v", bid)
 	}
@@ -78,7 +78,7 @@ func TestFillBidExchangesFunds(t *testing.T) {
 	id := storage.AddBid(bid)
 	bid.ID = id
 	storage.SetLastPrice("m", 10)
-	bid, filled := fillBid(storage, accounts, time.Time{}, bid, o, 10)
+	bid, o, filled := fillBid(storage, accounts, time.Time{}, bid, o, 10)
 	if !filled {
 		t.Fatal("Bid not filled")
 	}
@@ -101,7 +101,7 @@ func TestFillBidRejectsOnNoFunds(t *testing.T) {
 	id := storage.AddBid(bid)
 	bid.ID = id
 	storage.SetLastPrice("m", 10)
-	bid, filled := fillBid(storage, accounts, time.Time{}, bid, o, 10)
+	bid, o, filled := fillBid(storage, accounts, time.Time{}, bid, o, 10)
 	if filled {
 		t.Fatal("Bid was filled")
 	}
