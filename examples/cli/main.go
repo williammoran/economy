@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/williammoran/economy"
 )
@@ -43,7 +44,7 @@ market - List current prices of all known symbols
 func main() {
 	accounts := makeAccounts()
 	storage := economy.MakeMemoryStorage()
-	market := economy.MakeMarket(storage, accounts)
+	market := economy.MakeMarket(time.Now, storage, accounts)
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		tokens := nextCommand(reader)

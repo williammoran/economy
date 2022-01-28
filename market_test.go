@@ -2,11 +2,12 @@ package economy
 
 import (
 	"testing"
+	"time"
 )
 
 func TestOfferAddedToStorage(t *testing.T) {
 	storage := MakeMemoryStorage()
-	m := MakeMarket(storage, makeMockAccounts())
+	m := MakeMarket(time.Now, storage, makeMockAccounts())
 	o := Offer{Symbol: "m"}
 	m.Offer(o)
 	if len(storage.offers["m"]) != 1 {
@@ -16,7 +17,7 @@ func TestOfferAddedToStorage(t *testing.T) {
 
 func TestBidAddedToStorage(t *testing.T) {
 	storage := MakeMemoryStorage()
-	m := MakeMarket(storage, makeMockAccounts())
+	m := MakeMarket(time.Now, storage, makeMockAccounts())
 	m.orderProcessors = map[OrderType]orderProcessor{
 		OrderTypeMarket: &mockOrderProcessor{},
 	}

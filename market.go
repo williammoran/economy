@@ -77,7 +77,7 @@ type MarketStorage interface {
 }
 
 // Accounts provides a method for code to inject a callback
-// for crediteding or debiteding funds when transactions
+// for crediting or debiting funds when transactions
 // occur. Note that both functions must be transaction
 // safe otherwise funds could go missing.
 type Accounts interface {
@@ -96,13 +96,18 @@ type orderProcessor interface {
 	GetBidPrice(MarketStorage, Bid) int64
 }
 
-func MakeMarket(s MarketStorage, a Accounts) *Market {
+// MakeMarket creates an initiliazed *Market struct.
+// For the first parameter, pass in a function that will
+// return the current time. This allows the system to
+// act as a simulator if simulator time is not the same
+// as real time.
+func MakeMarket(t func() time.Time, s MarketStorage, a Accounts) *Market {
 	return &Market{
 		storage:  s,
 		accounts: a,
 		orderProcessors: map[OrderType]orderProcessor{
-			OrderTypeMarket: &marketOrderProcessor{now: time.Now},
-			OrderTypeLimit:  &limitOrderProcessor{now: time.Now},
+			OrderTypeMarket: &marketOrderProcessor{now: t},
+			OrderTypeLimit:  &limitOrderProcessor{now: t},
 		},
 	}
 }
